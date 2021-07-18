@@ -1,4 +1,4 @@
-//SPDX-identifier: MIT
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
 
@@ -29,7 +29,7 @@ contract TreasuryVault is IVault, ERC20, Ownable {
         _decimals = token.decimals();
     }
 
-    function decimals() public view override returns (uint8) {
+    function decimals() public view override returns (uint8) {`
         return _decimals;
     }
 
@@ -57,6 +57,12 @@ contract TreasuryVault is IVault, ERC20, Ownable {
 
         return true;
     }
+
+    // **********************************************************************
+    // TODO: CHECK VAULT FOR ROUNDING ERRORS USING THE LOWEST POSSIBLE UNIT
+    // DESTROY THIS MESSAGE AFTER SUCCESSFUL TESTING
+    // **********************************************************************
+
 
     // Close the vault. Claim back your token.
     // Unlocks the tokens and burns vault shares.
@@ -90,10 +96,14 @@ contract TreasuryVault is IVault, ERC20, Ownable {
         return token.transferFrom(msg.sender, address(this), amount_);
     }
     
-    function setFee(uint8 _percentage) external override onlyOwner returns(bool) {
-        withdrawFee = _percentage;   
+    function setFee(uint8 percentage_) external override onlyOwner returns(bool) {
+        withdrawFee = percentage_;   
         
-        emit FeeChanged(_percentage);
+        emit FeeChanged(percentage_);
         return true;
+    }
+
+    function transferShares(address recipient_, uint256 amount_) external returns (bool) {
+        transfer(recipient_, amount_);
     }
 }

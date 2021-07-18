@@ -25,6 +25,12 @@ async function main() {
   await dntVault.deployed();
   
   console.log("dntVault deployed to:", dntVault.address);
+
+  const TreasuryVault = await hre.ethers.getContractFactory("TreasuryVault");
+  const usdcVault = await TreasuryVault.deploy("USDC Vault Share", "USDC-VS", process.env.USDC_CONTRACT_ADDRESS);
+  await usdcVault.deployed();
+
+  console.log("usdcVault deployed to:", usdcVault.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

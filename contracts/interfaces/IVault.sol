@@ -1,4 +1,10 @@
-interface IVault {
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+interface IVault is IERC20 {
     function withdraw(uint256 amount) external returns (bool);
     function deposit(uint256 amount) external returns (bool);
     function borrow(uint256 amount) external returns (bool);
