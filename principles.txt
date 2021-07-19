@@ -19,6 +19,13 @@ interactions = external contract calls
 
 -----
 
+- parameter variables have trailing underscores: paramArg_
+- interval state variables have leading underscores: _privateState
+
+This is just to have some comptability with OpenZeppelin conventions
+
+-----
+
 Smart contracts are distributed systems using message passing, but through the VM.
 It's an event-driven system, you can't think object oriented. Each transaction is an event
 composed of multiple messages being passed in a certain order (contract call flow).
@@ -26,18 +33,27 @@ composed of multiple messages being passed in a certain order (contract call flo
 This is why it's always good to call external contracts last — you want to do all your state changes first
 before you leave the system.
 
+-----
 
+State SHOULD be immutable. There should be a very atomic, functional-style programming applied to smart contracts.
+SO many bugs/hacks come from shit people are doing with state that they shouldn't. So much admin managed state,
+side effects, and similar things causing security issues. 
 
+-----
+
+Upgrades/Proxies:
+
+The way that people are thinking about Proxies are so whack. There should be a single Proxy
+contract serving as an api gateway and everything else is just a read/query layer than can be redirected by the gateway.
+People trying to forward calls via delegate call through the state contract are insane.
+Diamond standard as a standard makes sense but the naming/branding around it is just ridiculous.
+
+Use a CQRS style contract architecture (separate reads/writes). Idk what I'm talking about.
 
 ----
 
 TODO:
-- ALL: Create clear destination addresses for tokens/ownership around token transfers across the smart contracts.
-- MEMBERSHIP REGISTRY: Don't worry about referrals. Just have an initialized list of addresses of everyone who owns tokens now (needs to deposit + whitelist for bulktransfers).
-- TREASURY VAULT: (Testing) Make sure to check behavior with fractions/rounding errors.
-- DAO ENTITY: Create defined "accounts"
-- create REWARDER: Use Masterchef contract template, but across epochs
-- create bulktransfer utility library
+- Recreate contracts with correct state + new file organization system.
 
 
 IDEA:
