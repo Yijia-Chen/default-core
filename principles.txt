@@ -1,0 +1,48 @@
+Design Principles
+
+1. Keep logic tight. Don't cut corners. Keep state where it should exist. 
+2. Keep code functionality modular. Contracts should be small and state changes basic.
+
+... Implement pure function design standards? No side effects, everything is coded functional style?
+--> Are there contract size limitations to this style of coding?
+
+
+Contract Architecture Convention/Style Guidelines:
+
+-----
+
+100% Checks - Effects - Interactions design pattern
+
+checks  = business logic validations
+effects = persistent state changes internal to the contract
+interactions = external contract calls
+
+-----
+
+Smart contracts are distributed systems using message passing, but through the VM.
+It's an event-driven system, you can't think object oriented. Each transaction is an event
+composed of multiple messages being passed in a certain order (contract call flow).
+
+This is why it's always good to call external contracts last — you want to do all your state changes first
+before you leave the system.
+
+
+
+
+----
+
+TODO:
+- ALL: Create clear destination addresses for tokens/ownership around token transfers across the smart contracts.
+- MEMBERSHIP REGISTRY: Don't worry about referrals. Just have an initialized list of addresses of everyone who owns tokens now (needs to deposit + whitelist for bulktransfers).
+- TREASURY VAULT: (Testing) Make sure to check behavior with fractions/rounding errors.
+- DAO ENTITY: Create defined "accounts"
+- create REWARDER: Use Masterchef contract template, but across epochs
+- create bulktransfer utility library
+
+
+IDEA:
+- on launch of contracts, start at epoch 1. Fresh start. New DAO from beginning. Reset issuance.
+- give all contributors/depositors tokens earned in the form of sDNT.
+- let depositors decide: deposit in contract to earn sDNT, or walk away from the table full refund no questions asked + earned sDNT.
+- set higher withdraw fee -> 20%? create locking mechanism for multipliers? 6mo, 12mo, 18mo?
+
