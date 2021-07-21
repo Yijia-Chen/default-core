@@ -2,56 +2,54 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "./interfaces/IVault.sol";
-// TODO: Implement reentrancy guard?
+import "../interfaces/IVaultV1.sol";
 
-contract TreasuryVault is IVault, ERC20, Ownable {
-    // implement safe 
-    using SafeERC20 for IERC20Metadata;
+contract TreasuryVault is Ownable {
 
-    // token contract + data (use the same decimals)
-    IERC20Metadata public token;
-    
-    // fee to withdraw assets from this vault (sent to DAO multisig)
-    uint8 public withdrawFee;
-    
-    // OZ's current ERC20 doesn't allow setting decimals except through function override....
-    uint8 private _decimals;
+    // MANAGED STATE
 
-    // Define the token contract
-    constructor(string memory name_, string memory symbol_, IERC20Metadata token_, uint8 withdrawFee_) ERC20(name_, symbol_) {
-        token = token_;
+    IERC20Metadata public immutable vaultAssets; // vault token
+    IERC20Metadata public immutable vaultShares; // claims on the tokens in the vault
+
+    // CONFIGURABLE VARIABLES
+
+    uint8 public withdrawFee; // fee charged when withdrawing assets from this vault (% of shares sent to DAO treasury wallet)
+
+    constructor(IERC20Metadata asset_, uint8 withdrawFee_) {
+        vaultAsset = asset_;
         withdrawFee = withdrawFee_;
-        _decimals = token.decimals();
+        
+        vaultName = string(abi.encodePacked("Default DAO Treasury Vault Share: ", vaultAsset.name()));
+        vaultSymbol = string(abi.encodePacked(vaultAsset.symbol(), "-VS"));
+        vaultDecimals = vaultAsset.decimals();
+
+        vaultShares = new VaultShares(vaultName, vaultSymbol, vaultDecimals);
     }
 
-    function decimals() public view override returns (uint8) {`
-        return _decimals;
-    }
-
-    // Open the vault. Deposit some token. Earn some shares.
+    // Open the vault. Deposit some vaultAssets. Earn some shares.
     // Locks token and mints vault shares
     function deposit(uint256 amount_) external override returns (bool){
         // Gets the amount of tokens locked in the contract
-        uint256 totalTokens = token.balanceOf(address(this));
+        uint256 totalTokens = vaultAssets.balanceOf(address(this));
         // Gets the amount of vault shares in existence
         uint256 totalShares = totalSupply();
         // If no shares exists, mint it 1:1 to the amount put in
         if (totalShares == 0 || totalTokens == 0) {
-            _mint(msg.sender, amount_);
+            vaultShares.issue(msg.sender, amount_);
         } 
+
         // Calculate and mint the amount of shares the token is worth. The ratio will change overtime, 
-        // as token is borrowed/repaid by the DAO
+        // as token is borrowed/repaid by the DAO. Vault shares decay w/ borrows.
+
         else {
             uint256 sharesToMint = amount_ * totalShares / totalTokens;
-            _mint(msg.sender, sharesToMint);
+            vaultShares.issue(msg.sender, sharesToMint);
         }
         // Lock the token in the contract
-        token.transferFrom(msg.sender, address(this), amount_);
+        vaultAssets.transferFrom(msg.sender, address(this), amount_);
 
         emit Deposited(msg.sender, amount_);
 
@@ -64,13 +62,13 @@ contract TreasuryVault is IVault, ERC20, Ownable {
     // **********************************************************************
 
 
-    // Close the vault. Claim back your token.
+    // Close the vault. Claim back your vaultAssets.
     // Unlocks the tokens and burns vault shares.
     function withdraw(uint256 shares_) public override returns (bool) {
         // Gets the amount of vault shares in existence
         uint256 totalShares = totalSupply();
         // Calculates the amount of tokens the vault shares are worth
-        uint256 totalTokens = shares_ * token.balanceOf(address(this)) / totalShares;
+        uint256 totalTokens = shares_ * vaultAssets.balanceOf(address(this)) / totalShares;
         
         // There may be a potential rounding error issue here, please ensure there's forced synchronization.
         uint256 tokensToDisperse = totalTokens * (100 - withdrawFee);
@@ -78,8 +76,8 @@ contract TreasuryVault is IVault, ERC20, Ownable {
         
         // do the transaction
         _burn(msg.sender, shares_);
-        token.transfer(msg.sender, tokensToDisperse);
-        token.transfer(owner(), feeCollected);
+        vaultAssets.transfer(msg.sender, tokensToDisperse);
+        vaultAssets.transfer(owner(), feeCollected);
 
         emit Withdrawn(msg.sender, tokensToDisperse);
 
@@ -88,12 +86,12 @@ contract TreasuryVault is IVault, ERC20, Ownable {
     
     // Let the DAO take money from the vault.
     function borrow(uint256 amount_) external override onlyOwner returns (bool) {
-        return token.transfer(msg.sender, amount_);
+        return vaultAssets.transfer(msg.sender, amount_);
     }
     
 
     function repay(uint256 amount_) external override onlyOwner returns(bool) { 
-        return token.transferFrom(msg.sender, address(this), amount_);
+        return vaultAssets.transferFrom(msg.sender, address(this), amount_);
     }
     
     function setFee(uint8 percentage_) external override onlyOwner returns(bool) {
@@ -104,6 +102,6 @@ contract TreasuryVault is IVault, ERC20, Ownable {
     }
 
     function transferShares(address recipient_, uint256 amount_) external returns (bool) {
-        transfer(recipient_, amount_);
+        return transfer(recipient_, amount_);
     }
 }

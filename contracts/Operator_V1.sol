@@ -11,29 +11,29 @@ import "./TreasuryVault.sol";
 // our wonderful DAO
 contract DaoEntity is Ownable {
 
+    // what the DAO truly owns: everything in here is for keeps.
+    address public daoWallet;
+
     // the internal clock of the DAO.
-    uint16 public epoch;
+    IEpoch public epoch;
 
     // the membership registry
     IMemberRegistry public memberships;
-
-    // what the DAO truly owns: everything in here is for keeps.
-    address public coffer;
 
     // our native DAO token...these will be worth a lot one day!
     IERC20 public defaultToken;
 
     // our native token vault. Provides liquidity in our virtual AMM and its shares are distributed to members as rewards.
-    IVault public dntVault;
+    IVaultV1 public dntVault;
 
     // our usdc vault. Provides liquidity in our virtual AMM, and pays for our expenses.
-    IVault public usdcVault;
+    IVaultV1 public usdcVault;
 
     // our rewarder contract, responsible for the prompt delivery of our token to our supporters and contributors!
-    IRewarder public depositRewarder;
+    IDepositRewarder public depositRewarder;
 
     // the contributor purse, which holds all the contributor tokens (separate multisig)
-    address public contributorPurse;
+    IContributorPurse public contributorPurse;
 
     // number of new tokens minted each epoch
     uint256 public issuance = 1000000;

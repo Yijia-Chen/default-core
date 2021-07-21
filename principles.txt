@@ -4,10 +4,38 @@ Design Principles
 2. Keep code functionality modular. Contracts should be small and state changes basic.
 
 ... Implement pure function design standards? No side effects, everything is coded functional style?
---> Are there contract size limitations to this style of coding?
+--> Are there contract size limitations to this style of coding?y
 
 
 Contract Architecture Convention/Style Guidelines:
+
+Our contract architecture is broken down into different pieces:
+
+1. State Contracts -> state
+2. Application Contracts -> business logic
+3. Interfaces -> defining state + application contracts for external use
+4. Operator.sol -> this is the "main" contract that aggregates and forwards calls to other contracts
+                   that the DAO multisig calls to execute certain operational functions like incrementEpoch() and bulkTransfer()
+
+-----
+
+1. State Contracts
+- These contracts are immutable and represent source of truth data for the DAO.
+- State Contracts are always Ownable, and they are owned by the application contracts that can change state
+    - In the future if there are multiple applications that can change state, upgrade the modifier library so that
+    - there can be an array of owners (whitelisted applications)
+- If we want to improve state we should extend existing storage, keeping state immutability is critical.
+
+2. Application Contracts
+- These contracts can be rotated and upgraded. During upgrade, change the ownership of the state contracts
+  to the application contracts
+
+3. Interfaces
+- Define reads, writes, and events separately for the Interfaces
+
+4. Operator
+- Defines the "era" or "main version" of the DAO protocol. E.g. Default v0.1 or Default v1.0 (for major releases)
+
 
 -----
 
