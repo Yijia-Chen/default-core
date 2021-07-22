@@ -81,7 +81,8 @@ Use a CQRS style contract architecture (separate reads/writes). Idk what I'm tal
 ----
 
 TODO:
-- Recreate contracts with correct state + new file organization system.
+- Create modifier contracts for State contracts vs. Application contracts --> (transfer ownership etc.)
+- Create rewarder contract
 
 
 IDEA:

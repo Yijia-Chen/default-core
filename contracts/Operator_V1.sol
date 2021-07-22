@@ -5,8 +5,6 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IVault.sol";
-import "./DefaultToken.sol";
-import "./TreasuryVault.sol";
 
 // our wonderful DAO
 contract DaoEntity is Ownable {

@@ -4,8 +4,9 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-interface VaultV1 is IERC20 {
+interface IVaultV1 is IERC20 {
     // reads + writes in IERC20.sol;
+    function pricePerShare() external returns (uint256);
 
     // writes
     function withdraw(uint256 amount) external returns (bool);

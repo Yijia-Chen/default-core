@@ -2,9 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-// TODO
-
-interface IMembershipsV1 {
+interface IMemberships {
     // reads
     function isMember(address member_) external view returns (bool);
     function getMembers() external view returns (address[] memory);

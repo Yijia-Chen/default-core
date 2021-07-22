@@ -3,8 +3,9 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "../libraries/StateContract.sol";
 
-contract Epoch is Ownable {
+contract Epoch is StateContract {
     
     uint16 private _epoch; // assuming weekly epochs, 16 bytes ~ 1,260 years (2**16/52)
 
