@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-interface STATE_MiningRewards {
+interface STATE_ClaimableRewards {
     // properties (reads)
     function rewardToken() external view returns (IERC20);
     function depositorShares() external view returns (IERC20);
@@ -14,5 +14,5 @@ interface STATE_MiningRewards {
 
     // state changes (writes)
     function resetClaimableRewards(address depositor_) external;
-    function updateIssuedRewards(uint256 newRewards_) external;
+    function distributeRewards(uint256 newRewards_) external;
 }

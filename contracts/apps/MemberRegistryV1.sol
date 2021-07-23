@@ -21,9 +21,11 @@ contract MemberRegistry is APP_MemberRegistry, AppContract {
     // MANAGED STATE
     STATE_Memberships private _Memberships;
 
-    constructor(STATE_Memberships memberships_) AppContract(memberships_) {}
+    constructor(STATE_Memberships memberships_) AppContract(memberships_) {
+        _Memberships = memberships_;
+    }
 
-    function grantMembership(address member_) external onlyOwner returns (bool) {
+    function grantMembership(address member_) external override onlyOwner returns (bool) {
         _Memberships.grantMembership(member_);
 
         emit MembershipGranted(member_);
@@ -31,7 +33,7 @@ contract MemberRegistry is APP_MemberRegistry, AppContract {
         return true;
     }
 
-    function revokeMembership(address member_) external onlyOwner returns (bool) {
+    function revokeMembership(address member_) external override onlyOwner returns (bool) {
         _Memberships.revokeMembership(member_);
 
         emit MembershipRevoked(member_);

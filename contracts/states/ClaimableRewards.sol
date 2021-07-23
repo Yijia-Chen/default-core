@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "../libraries/StateContract.sol";
-import "./interfaces/MiningRewardsV1.sol";
+import "./interfaces/ClaimableRewardsV1.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // The state for claimable rewards from the Rewarder contract please see contracts/application/RewarderV1.sol.

@@ -4,13 +4,20 @@ pragma solidity ^0.8.0;
 
 import "../libraries/AppContract.sol";
 import "./interfaces/TreasuryVaultV1.sol";
+import "./interfaces/DepositMiningV1.sol";
+import "../states/VaultShares.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+
+interface STATE_OwnableVaultShares is STATE_VaultShares {
+    function transferOwnership(address newOwner_) external;
+    function approveApplication(address appContract_) external;
+}
 
 contract TreasuryVault is APP_TreasuryVault, AppContract {
 
     // MANAGED STATE
-    IERC20Metadata private immutable _VaultAsset; // vault token
-    IERC20Metadata private immutable _VaultShares; // claims on the tokens in the vault
+    IERC20Metadata private _VaultAsset; // vault token
+    VaultShares private _VaultShares; // claims on the tokens in the vault
 
     // APP INTEGRATIONS
     APP_DepositMining private _DepositMining; // register deposits in the rewarder contract
@@ -19,7 +26,7 @@ contract TreasuryVault is APP_TreasuryVault, AppContract {
     uint8 private _withdrawFee; // fee charged when withdrawing assets from this vault (% of shares sent to DAO treasury wallet)
     bool private _rewardableVault; // flag for whether the vault produces rewards: yes for USDC, no for DNT. This also allows us to open new incentivized vaults in the future.
 
-    constructor(IERC20Metadata asset_, uint8 withdrawFee_, bool rewardableVault_, IMemberships memberships_) AppContract(memberships_) {
+    constructor(IERC20Metadata asset_, uint8 withdrawFee_, bool rewardableVault_, STATE_Memberships memberships_) AppContract(memberships_) {
         _VaultAsset = asset_;
         _withdrawFee = withdrawFee_;
         _rewardableVault = rewardableVault_;
@@ -29,12 +36,12 @@ contract TreasuryVault is APP_TreasuryVault, AppContract {
     function _openVault() internal {
 
         // ensure the Vault Shares have a standard naming format
-        string vaultName = string(abi.encodePacked("Default DAO Treasury Vault Share: ", _VaultAsset.symbol()));
-        string vaultSymbol = string(abi.encodePacked(_VaultAsset.symbol(), "-VS"));
-        string vaultDecimals = _VaultAsset.decimals();
+        string memory vaultName = string(abi.encodePacked("Default DAO Treasury Vault Share: ", _VaultAsset.symbol()));
+        string memory vaultSymbol = string(abi.encodePacked(_VaultAsset.symbol(), "-VS"));
+        uint8 vaultDecimals = _VaultAsset.decimals();
 
         // create the token contract for this vault
-        _VaultShares = new _VaultShares(vaultName, vaultSymbol, vaultDecimals);
+        _VaultShares = VaultShares(new VaultShares(vaultName, vaultSymbol, vaultDecimals));
 
         // make the owner of the _VaultShares contract the same owner as this contract (dev addr)
         // *** make sure you transfer the ownership of the share contract to the DAO multisig as well
@@ -45,7 +52,7 @@ contract TreasuryVault is APP_TreasuryVault, AppContract {
     }
 
     // how many tokens you get back for each share you own in the vault
-    function pricePerShare() public override returns (uint256) {
+    function pricePerShare() public view override returns (uint256) {
         return _VaultAsset.balanceOf(address(this))/_VaultShares.totalSupply();
     }
 
@@ -83,7 +90,7 @@ contract TreasuryVault is APP_TreasuryVault, AppContract {
     }
 
     // Open the vault. Give depositors tokens and burn the vault shares they used to redeem them.
-    function withdraw(uint256 vaultSharesRedeemed_) private override returns (bool) {
+    function withdraw(uint256 vaultSharesRedeemed_) external override onlyMember returns (bool) {
         uint256 totalAssetsInVault = _VaultAsset.balanceOf(address(this));
         uint256 amountToWithdraw = totalAssetsInVault * vaultSharesRedeemed_ / _VaultShares.totalSupply();
 
@@ -98,7 +105,7 @@ contract TreasuryVault is APP_TreasuryVault, AppContract {
         uint256 feeCollected = amountToWithdraw - netTokensRedeemed;
         
         // Ensure that the redeemed shares are burned
-        _burn(msg.sender, vaultSharesRedeemed_);
+        _VaultShares.burnShares(vaultSharesRedeemed_);
 
         // Claim all rewards before completing withdraw prior to making transfers
         _DepositMining.claimRewardsFor(msg.sender);

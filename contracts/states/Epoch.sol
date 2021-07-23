@@ -7,14 +7,14 @@ import "./interfaces/EpochV1.sol";
 
 contract Epoch is STATE_Epoch, StateContract {
     
-    uint16 public override epoch = 0; // assuming weekly epochs, 16 bytes ~ 1,260 years (2**16/52)
+    uint16 public override currentEpoch = 0; // assuming weekly epochs, 16 bytes ~ 1,260 years (2**16/52)
 
     function incrementEpoch() external override onlyApprovedApps {
-        epoch++;
+        currentEpoch++;
     }
 
     function resetEpoch() external override onlyApprovedApps {
-        epoch = 0;
+        currentEpoch = 0;
     }
 
 }

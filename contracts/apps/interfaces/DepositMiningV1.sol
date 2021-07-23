@@ -2,11 +2,12 @@
 
 pragma solidity ^0.8.0;
 
-contract APP_DepositMining {
+interface APP_DepositMining {
     // reads
-    function pendingRewards(address depositor_) public view returns (uint256) {}
+    function pendingRewards(address depositor_) external view returns (uint256);
 
     // writes
-    function claimFor(address redeemer_) external returns (bool) {}
-    function issueRewards(address newRewards_) external returns (bool) {}
+    function register(address redeemer_) external returns (bool);
+    function claimRewardsFor(address redeemer_) external returns (bool);
+    function issueRewards(uint256 shares_) external returns (bool);
 }

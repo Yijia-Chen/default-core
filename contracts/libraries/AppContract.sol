@@ -17,8 +17,8 @@ import "../states/interfaces/MembershipsV1.sol";
  */
 
 abstract contract AppContract is StateContract {
-    event ApprovalReceived(address indexed contract_);
-    event ApprovalRevoked(address indexed contract_);
+    event ReceivedApprovalFor(address indexed contract_);
+    event ApprovalRevokedFor(address indexed contract_);
     
     STATE_Memberships private _Memberships;
     address[] private _approvedFor;
@@ -52,9 +52,8 @@ abstract contract AppContract is StateContract {
                 _approvedFor[i] == _approvedFor[_approvedFor.length - 1];
                 _approvedFor.pop();
             }
-    
+        }
+
         emit ApprovalRevokedFor(contract_);
-
     }
-
 }

@@ -25,20 +25,20 @@ contract DepositMining is APP_DepositMining, AppContract {
     // for eligibility. This means only members that deposit directly into the Vault have access to rewards. 
     // This also helps cleanly separate contracts handling vault logic vs rewards logic.
 
-    constructor(IERC20 usdcVaultShares_, IERC20 dntVaultShares_, MembershipsV1 memberships_) AppContract(memberships_) {
+    constructor(IERC20 usdcVaultShares_, IERC20 dntVaultShares_, STATE_Memberships memberships_) AppContract(memberships_) {
         _UsdcVaultShares = usdcVaultShares_;
         _DntVaultShares = dntVaultShares_;
     }
 
     function pendingRewards(address depositor_) public view override returns (uint256) {
         uint256 historicallyAccumulatedRewards = _UsdcVaultShares.balanceOf(depositor_) * _Rewards.accRewardsPerShare();
-        uint256 pendingRewards = historicallyAccumulatedRewards - _Rewards.ineligibleRewards(depositor_);
+        uint256 rewardsToDistribute = historicallyAccumulatedRewards - _Rewards.ineligibleRewards(depositor_);
 
-        // just in case somehow rounding error causes pendingRewards to exceed the balance of the tokens in the contract
-        if ( pendingRewards > _DntVaultShares.balanceOf(address(this)) ) {
-             pendingRewards = _DntVaultShares.balanceOf(address(this));
+        // just in case somehow rounding error causes rewardsToDistribute to exceed the balance of the tokens in the contract
+        if ( rewardsToDistribute > _DntVaultShares.balanceOf(address(this)) ) {
+             rewardsToDistribute = _DntVaultShares.balanceOf(address(this));
         }
-        return pendingRewards;
+        return rewardsToDistribute;
     }
 
     function register(address depositor_) external override onlyApprovedApps returns (bool) {
@@ -49,11 +49,12 @@ contract DepositMining is APP_DepositMining, AppContract {
     function claimRewardsFor(address redeemer_) external override returns (bool) {
         uint rewards = pendingRewards(redeemer_);
         _Rewards.resetClaimableRewards(redeemer_);
-        _DntVaultShares.transfer(mint, rewards);
+        _DntVaultShares.transfer(redeemer_, rewards);
         return true;
     }
 
-    // ensure only 
+    // *** NOTE *** the argument passed in this function is in nominal "tokens_", but the rewards distributed
+    // is in shares. Calculate shares to distribute based on nominal tokens created (issuance/2).
     function issueRewards(uint256 newRewards_) external override onlyApprovedApps returns (bool) {
         _Rewards.distributeRewards(newRewards_);
         return true;
