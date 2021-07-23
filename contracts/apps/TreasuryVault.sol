@@ -4,29 +4,25 @@ pragma solidity ^0.8.0;
 
 import "../libraries/AppContract.sol";
 import "./interfaces/TreasuryVaultV1.sol";
-import "./interfaces/DepositMiningV1.sol";
+import "./DepositMining.sol";
+import "../states/Memberships.sol";
 import "../states/VaultShares.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-
-interface STATE_OwnableVaultShares is STATE_VaultShares {
-    function transferOwnership(address newOwner_) external;
-    function approveApplication(address appContract_) external;
-}
 
 contract TreasuryVault is APP_TreasuryVault, AppContract {
 
     // MANAGED STATE
     IERC20Metadata private _VaultAsset; // vault token
-    VaultShares private _VaultShares; // claims on the tokens in the vault
+    VaultShares private _VaultShares; // use VaultShares instead of STATE_VaultShares because we need to change ownership of the contract.
 
     // APP INTEGRATIONS
-    APP_DepositMining private _DepositMining; // register deposits in the rewarder contract
+    DepositMining private _DepositMining; // register deposits in the rewarder contract
 
     // INTERNAL VARIABLES
     uint8 private _withdrawFee; // fee charged when withdrawing assets from this vault (% of shares sent to DAO treasury wallet)
     bool private _rewardableVault; // flag for whether the vault produces rewards: yes for USDC, no for DNT. This also allows us to open new incentivized vaults in the future.
 
-    constructor(IERC20Metadata asset_, uint8 withdrawFee_, bool rewardableVault_, STATE_Memberships memberships_) AppContract(memberships_) {
+    constructor(IERC20Metadata asset_, uint8 withdrawFee_, bool rewardableVault_, Memberships memberships_) AppContract(memberships_) {
         _VaultAsset = asset_;
         _withdrawFee = withdrawFee_;
         _rewardableVault = rewardableVault_;

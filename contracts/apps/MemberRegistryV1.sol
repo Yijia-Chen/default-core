@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "../libraries/AppContract.sol";
 import "../apps/interfaces/MemberRegistryV1.sol";
-import "../states/interfaces/MembershipsV1.sol";
+import "../states/Memberships.sol";
 
 /*
     * *****************************************************************************************************
@@ -19,9 +19,9 @@ import "../states/interfaces/MembershipsV1.sol";
 contract MemberRegistry is APP_MemberRegistry, AppContract {
     
     // MANAGED STATE
-    STATE_Memberships private _Memberships;
+    Memberships private _Memberships;
 
-    constructor(STATE_Memberships memberships_) AppContract(memberships_) {
+    constructor(Memberships memberships_) AppContract(memberships_) {
         _Memberships = memberships_;
     }
 

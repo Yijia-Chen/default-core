@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 
 import "../libraries/AppContract.sol";
 import "./interfaces/DepositMiningV1.sol";
-import "../states/interfaces/ClaimableRewardsV1.sol";
-import "../states/interfaces/MembershipsV1.sol";
+import "../states/ClaimableRewards.sol";
+import "../states/Memberships.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 
@@ -17,7 +17,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract DepositMining is APP_DepositMining, AppContract {
 
     // MANAGED STATE
-    STATE_ClaimableRewards private _Rewards; // the balance sheet mining contract, our rewards program for depositors.
+    ClaimableRewards private _Rewards; // the balance sheet mining contract, our rewards program for depositors.
     IERC20 private _UsdcVaultShares; // the usdc vault shares contract, we give owners of these some dnt vault share rewards too!
     IERC20 private _DntVaultShares; // the dnt vault shares contract, our reward token.
 
@@ -25,7 +25,7 @@ contract DepositMining is APP_DepositMining, AppContract {
     // for eligibility. This means only members that deposit directly into the Vault have access to rewards. 
     // This also helps cleanly separate contracts handling vault logic vs rewards logic.
 
-    constructor(IERC20 usdcVaultShares_, IERC20 dntVaultShares_, STATE_Memberships memberships_) AppContract(memberships_) {
+    constructor(IERC20 usdcVaultShares_, IERC20 dntVaultShares_, Memberships memberships_) AppContract(memberships_) {
         _UsdcVaultShares = usdcVaultShares_;
         _DntVaultShares = dntVaultShares_;
     }

@@ -4,15 +4,13 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./states/interfaces/EpochV1.sol";
-import "./states/interfaces/MembershipsV1.sol";
-import "./apps/interfaces/TreasuryVaultV1.sol";
-import "./apps/interfaces/DepositMiningV1.sol";
+import "./states/Epoch.sol";
+import "./states/Memberships.sol";
+import "./apps/TreasuryVault.sol";
+import "./apps/DepositMining.sol";
 
 interface IERC20Mintable {
     function mint(uint256 amount_) external;
-    function transferOwnership(address newOwner_) external;
-    function approveApplication(address appContract_) external;
 }
 
 contract Operator is Ownable {
@@ -20,14 +18,14 @@ contract Operator is Ownable {
    event ContributorsRewarded(uint16 epoch_, uint256 rewardsDistributed_);
 
     // MANAGED STATE
-    STATE_Epoch private _Epoch;
-    STATE_Memberships private _Memberships;
+    Epoch private _Epoch;
+    Memberships private _Memberships;
     IERC20Mintable private _DefaultToken;
     IERC20 private _DntVaultShares;
 
     // APP INTEGRATIONS
-    APP_TreasuryVault private _DntVault;
-    APP_DepositMining private _DepositMining;
+    TreasuryVault private _DntVault;
+    DepositMining private _DepositMining;
 
     // INTERNAL VARIABLES
     address private _contributorPurse = address(0);
@@ -35,12 +33,12 @@ contract Operator is Ownable {
 
     constructor(
         address contributorPurse_,
-        STATE_Epoch epoch_,
-        STATE_Memberships memberships_,
+        Epoch epoch_,
+        Memberships memberships_,
         IERC20Mintable defaultToken_,
         IERC20 dntVaultShares_,
-        APP_TreasuryVault dntVault_,
-        APP_DepositMining depositMining_
+        TreasuryVault dntVault_,
+        DepositMining depositMining_
     ) {
         _setContributorPurse(contributorPurse_);
         _Epoch = epoch_;
