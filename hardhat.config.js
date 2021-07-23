@@ -26,6 +26,10 @@ module.exports = {
     ropsten: {
       url: "https://ropsten.infura.io/v3/cb3b2911315442f68e6d83936c5b46dd",
       accounts: [process.env.PRIVATE_KEY]
+    },
+    matic: {
+      url: "JSON RPC GOES HERE",
+      accounts: [process.env.PRIVATE_KEY]
     }
   },
   etherscan: {

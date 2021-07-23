@@ -26,16 +26,38 @@ Our contract architecture is broken down into different pieces:
     - there can be an array of owners (whitelisted applications)
 - If we want to improve state we should extend existing storage, keeping state immutability is critical.
 
+- State contracts have PUBLIC variables and WRITE functions only.
+  - public variables -> return
+  - public functions -> no return
+- Complex views (queries) are created in the app contracts by reading from the state variables.
+
 2. Application Contracts
 - These contracts can be rotated and upgraded. During upgrade, change the ownership of the state contracts
   to the application contracts
+- These contracts are versioned
+- State contracts are underscore Capitalized & always _private
 
 3. Interfaces
-- Define reads, writes, and events separately for the Interfaces
+- State Interfaces: Define reads & writes for the state contract.
+  - reads: MUST BE Public VARIABLES
+  - writes: MUST BE SIMPLE ATOMIC TRANSACTIONS (NO BUSINESS LOGIC)
+
+- App Interfaces: Define reads & writes for the logic & events.
 
 4. Operator
 - Defines the "era" or "main version" of the DAO protocol. E.g. Default v0.1 or Default v1.0 (for major releases)
 
+
+-----
+
+importing priority:
+
+ import library (state vs. app) --> first thing devs should think about: is this a state contract or app contract?
+ import outside interfaces (@openzeppelin/IERC.sol)
+ import protocol/interface
+ import outside modules (@openzeppelin/ERC20.sol)
+
+declaring priority: declare protocol/interface, declare contract type (app/state)
 
 -----
 
@@ -76,18 +98,25 @@ contract serving as an api gateway and everything else is just a read/query laye
 People trying to forward calls via delegate call through the state contract are insane.
 Diamond standard as a standard makes sense but the naming/branding around it is just ridiculous.
 
-Use a CQRS style contract architecture (separate reads/writes). Idk what I'm talking about.
+Use a CQRS style contract architecture (separate reads/writes).
 
 ----
 
 TODO:
-- Create modifier contracts for State contracts vs. Application contracts --> (transfer ownership etc.)
-- Create rewarder contract
-
+- Add events for logging purposes
 
 IDEA:
 - on launch of contracts, start at epoch 1. Fresh start. New DAO from beginning. Reset issuance.
 - give all contributors/depositors tokens earned in the form of sDNT.
 - let depositors decide: deposit in contract to earn sDNT, or walk away from the table full refund no questions asked + earned sDNT.
 - set higher withdraw fee -> 20%? create locking mechanism for multipliers? 6mo, 12mo, 18mo?
+
+IDEA: 
+
+Referral Mining: 
+
+- incentivized intros program: make intros to the dao mine referral bonuses
+- referral is an onlyMember() that requires a certain # of tokens staked
+  - only contributors/investors can feasibly mine
+
 

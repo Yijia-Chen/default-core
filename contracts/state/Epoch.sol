@@ -2,31 +2,19 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "../libraries/StateContract.sol";
+import "./protocols/EpochV1.sol";
 
-contract Epoch is StateContract {
+contract Epoch is EpochV1, StateContract {
     
-    uint16 private _epoch; // assuming weekly epochs, 16 bytes ~ 1,260 years (2**16/52)
+    uint16 public override epoch = 0; // assuming weekly epochs, 16 bytes ~ 1,260 years (2**16/52)
 
-    constructor() {
-        _epoch = 0;
+    function incrementEpoch() external override onlyApprovedApps {
+        epoch++;
     }
 
-    // reads
-
-    function currentEpoch() external view returns (uint16) {
-        return _epoch;
-    }
-
-    // writes
-
-    function incrementEpoch() external onlyOwner {
-        _epoch++;
-    }
-
-    function resetEpoch() external onlyOwner {
-        _epoch = 0;
+    function resetEpoch() external override onlyApprovedApps {
+        epoch = 0;
     }
 
 }
