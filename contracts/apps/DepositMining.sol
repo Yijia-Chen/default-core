@@ -4,12 +4,12 @@ pragma solidity ^0.8.0;
 
 import "../libraries/AppContract.sol";
 import "./interfaces/DepositMiningV1.sol";
-import "../states/interfaces/DepositRewardsV1.sol";
+import "../states/interfaces/ClaimableRewardsV1.sol";
 import "../states/interfaces/MembershipsV1.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 
-// The Default version of the Masterchef contract. We distribute rewards using the same principle.
+// The Default version of the Masterchef contract. We distribute mining rewards using the same principle.
 // Here's our very first balance sheet mining contract. In the words of a notorious chef:
 
     // Have fun reading it. Hopefully it's bug-free. God bless.
@@ -17,7 +17,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract DepositMining is APP_DepositMining, AppContract {
 
     // MANAGED STATE
-    STATE_DepositRewards private _Rewards; // the balance sheet mining contract, our rewards program for depositors.
+    STATE_ClaimableRewards private _Rewards; // the balance sheet mining contract, our rewards program for depositors.
     IERC20 private _UsdcVaultShares; // the usdc vault shares contract, we give owners of these some dnt vault share rewards too!
     IERC20 private _DntVaultShares; // the dnt vault shares contract, our reward token.
 
@@ -46,18 +46,16 @@ contract DepositMining is APP_DepositMining, AppContract {
         return true;
     }
 
-    function claimFor(address redeemer_) external override returns (bool) {
-
-        // make sure to reset rewards before transfering shares to prevent reEntrancy attacks
+    function claimRewardsFor(address redeemer_) external override returns (bool) {
         uint rewards = pendingRewards(redeemer_);
         _Rewards.resetClaimableRewards(redeemer_);
-        _DntVaultShares.transfer(redeemer_, rewards);
+        _DntVaultShares.transfer(mint, rewards);
         return true;
     }
 
     // ensure only 
     function issueRewards(uint256 newRewards_) external override onlyApprovedApps returns (bool) {
-        _Rewards.updateIssuedRewards(newRewards_);
+        _Rewards.distributeRewards(newRewards_);
         return true;
     }
 }

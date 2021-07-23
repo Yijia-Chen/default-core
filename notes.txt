@@ -30,12 +30,14 @@ Our contract architecture is broken down into different pieces:
   - public variables -> return
   - public functions -> no return
 - Complex views (queries) are created in the app contracts by reading from the state variables.
+- no events (events are for indexing instances of application logic execution)
 
 2. Application Contracts
 - These contracts can be rotated and upgraded. During upgrade, change the ownership of the state contracts
   to the application contracts
 - These contracts are versioned
 - State contracts are underscore Capitalized & always _private
+- Events are defined on applications
 
 3. Interfaces
 - State Interfaces: Define reads & writes for the state contract.

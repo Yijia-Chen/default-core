@@ -8,10 +8,11 @@ interface APP_MemberRegistry {
     function getMembers() external view returns (address[] memory);
 
     // writes
-    function grantMembership(address member_) external;
-    function revokeMembership(address member_) external;
+    function grantMembership(address member_) external returns (bool);
+    function revokeMembership(address member_) external returns (bool);
 
     // events
     Event MembershipGranted(address indexed member_);
+    Event MembershipRevoked(address indexed member_);
 
 }

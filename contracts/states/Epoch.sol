@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "../libraries/StateContract.sol";
-import "./state/EpochV1.sol";
+import "./interfaces/EpochV1.sol";
 
 contract Epoch is STATE_Epoch, StateContract {
     

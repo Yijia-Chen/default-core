@@ -23,16 +23,20 @@ contract MemberRegistry is APP_MemberRegistry, AppContract {
 
     constructor(STATE_Memberships memberships_) AppContract(memberships_) {}
 
-    function grantMembership(address member_) external onlyOwner {
+    function grantMembership(address member_) external onlyOwner returns (bool) {
         _Memberships.grantMembership(member_);
 
         emit MembershipGranted(member_);
+
+        return true;
     }
 
-    function revokeMembership(address member_) external onlyOwner {
+    function revokeMembership(address member_) external onlyOwner returns (bool) {
         _Memberships.revokeMembership(member_);
 
         emit MembershipRevoked(member_);
+
+        return true;
     }
 }
 

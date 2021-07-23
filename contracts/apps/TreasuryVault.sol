@@ -13,9 +13,9 @@ contract TreasuryVault is APP_TreasuryVault, AppContract {
     IERC20Metadata private immutable _VaultShares; // claims on the tokens in the vault
 
     // APP INTEGRATIONS
-    APP_DepositMining private _Rewarder; // register deposits in the rewarder contract
+    APP_DepositMining private _DepositMining; // register deposits in the rewarder contract
 
-    // INSTANCE VARIABLES
+    // INTERNAL VARIABLES
     uint8 private _withdrawFee; // fee charged when withdrawing assets from this vault (% of shares sent to DAO treasury wallet)
     bool private _rewardableVault; // flag for whether the vault produces rewards: yes for USDC, no for DNT. This also allows us to open new incentivized vaults in the future.
 
@@ -46,7 +46,7 @@ contract TreasuryVault is APP_TreasuryVault, AppContract {
 
     // how many tokens you get back for each share you own in the vault
     function pricePerShare() public override returns (uint256) {
-        return _VaultAsset.totalSupply()/_VaultShares.totalSupply();
+        return _VaultAsset.balanceOf(address(this))/_VaultShares.totalSupply();
     }
 
     // Open the vault. Deposit some token. Get some shares. Members only.
@@ -74,7 +74,7 @@ contract TreasuryVault is APP_TreasuryVault, AppContract {
 
         // If this vault gives rewards for deposits, register the depositor with the rewards contract
         if (_rewardableVault) {
-            _Rewarder.resetClaimableRewards(msg.sender);
+            _DepositMining.register(msg.sender);
         }
 
         emit Deposited(msg.sender, depositAmount_);
@@ -101,7 +101,7 @@ contract TreasuryVault is APP_TreasuryVault, AppContract {
         _burn(msg.sender, vaultSharesRedeemed_);
 
         // Claim all rewards before completing withdraw prior to making transfers
-        _Rewarder.claimFor(msg.sender);
+        _DepositMining.claimRewardsFor(msg.sender);
         _VaultAsset.transfer(msg.sender, netTokensRedeemed);
         _VaultAsset.transfer(owner(), feeCollected);
 
