@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "./StateContract.sol";
-import "../states/interfaces/MembershipsV1.sol";
+import "../state/Memberships.sol";
 
 /**
  * Application Contracts are contracts that restrict certain functions to be accesible only by DAO members (on our membership roster).
@@ -20,10 +20,10 @@ abstract contract AppContract is StateContract {
     event ReceivedApprovalFor(address indexed contract_);
     event ApprovalRevokedFor(address indexed contract_);
     
-    STATE_Memberships private _Memberships;
+    Memberships private _Memberships;
     address[] private _approvedFor;
 
-    constructor(STATE_Memberships memberships_) {
+    constructor(Memberships memberships_) {
         _Memberships = memberships_;
     }
 

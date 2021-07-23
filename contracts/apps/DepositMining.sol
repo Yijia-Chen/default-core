@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 
 import "../libraries/AppContract.sol";
 import "./interfaces/DepositMiningV1.sol";
-import "../states/ClaimableRewards.sol";
-import "../states/Memberships.sol";
+import "../state/ClaimableRewards.sol";
+import "../state/Memberships.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 

@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "../libraries/AppContract.sol";
 import "../apps/interfaces/MemberRegistryV1.sol";
-import "../states/Memberships.sol";
+import "../state/Memberships.sol";
 
 /*
     * *****************************************************************************************************

@@ -5,8 +5,8 @@ pragma solidity ^0.8.0;
 import "../libraries/AppContract.sol";
 import "./interfaces/TreasuryVaultV1.sol";
 import "./DepositMining.sol";
-import "../states/Memberships.sol";
-import "../states/VaultShares.sol";
+import "../state/Memberships.sol";
+import "../state/VaultShares.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 contract TreasuryVault is APP_TreasuryVault, AppContract {
