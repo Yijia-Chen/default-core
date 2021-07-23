@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "../interfaces/IMembership.sol";
 
+import "../libraries/AppContract.sol";
+import "../apps/interfaces/MemberRegistryV1.sol";
+import "../states/interfaces/MembershipsV1.sol";
 
 /*
     * *****************************************************************************************************
@@ -16,19 +16,23 @@ import "../interfaces/IMembership.sol";
     * *****************************************************************************************************
     */ 
 
-contract Registry is AppContract {
+contract MemberRegistry is APP_MemberRegistry, AppContract {
     
-    IMembership private _memberships;
+    // MANAGED STATE
+    STATE_Memberships private _Memberships;
 
-    constructor(IMembership memberships_) AppContract(memberships_) {}
+    constructor(STATE_Memberships memberships_) AppContract(memberships_) {}
 
-    // writes
     function grantMembership(address member_) external onlyOwner {
-        _memberships.grantMembership(address member_);
+        _Memberships.grantMembership(member_);
+
+        emit MembershipGranted(member_);
     }
 
     function revokeMembership(address member_) external onlyOwner {
-        _memberships.revokeMembership(address member_);
+        _Memberships.revokeMembership(member_);
+
+        emit MembershipRevoked(member_);
     }
 }
 

@@ -1,7 +1,5 @@
 node_modules
 .env
 
-contracts/application/RegistryV1.sol
-
 artifacts/
 cache/

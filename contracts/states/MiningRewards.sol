@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "../libraries/StateContract.sol";
-import "./protocols/DepositorRewardsV1.sol";
+import "./protocols/MiningRewardsV1.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 
@@ -34,7 +34,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // For formal paper for this strategy, see: https://uploads-ssl.webflow.com/5ad71ffeb79acc67c8bcdaba/5ad8d1193a40977462982470_scalable-reward-distribution-paper.pdf
 
-contract DepositorRewards is DepositorRewardsV1, StateContract {
+contract MiningRewards is STATE_MiningRewards, StateContract {
 
     IERC20 public override rewardToken; // DNT-VS => vault shares of the native Treasury Vault (DNT)
     IERC20 public override depositorShares; // USDC-VS => vault shares of the incentivized Treasury Vault (USDC)
@@ -53,7 +53,7 @@ contract DepositorRewards is DepositorRewardsV1, StateContract {
     }
 
     // update the amount of rewards accumulated by each incentivized share
-    function issueRewards(uint256 newRewards_) external override onlyApprovedApps {
+    function updateIssuedRewards(uint256 newRewards_) external override onlyApprovedApps {
         accRewardsPerShare += newRewards_/depositorShares.totalSupply();
     }
 }

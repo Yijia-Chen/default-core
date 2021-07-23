@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "../libraries/StateContract.sol";
-import "./protocols/MembershipsV1.sol";
+import "./interfaces/MembershipsV1.sol";
 
 contract Memberships is MembershipsV1, StateContract {
 
