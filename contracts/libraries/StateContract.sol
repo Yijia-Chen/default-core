@@ -32,7 +32,7 @@ abstract contract StateContract is Ownable {
     address[] private _approvedApplications;
 
     modifier onlyApprovedApps() {
-        require(isApproved[msg.sender], "Application is not approved to call this contract");
+        require(isApproved[msg.sender], "StateContract onlyApprovedApps(): Application is not approved to call this contract");
         _;
     }
 

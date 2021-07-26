@@ -102,7 +102,7 @@ contract TreasuryVault is APP_TreasuryVault, AppContract {
         uint256 feeCollected = amountToWithdraw - netTokensRedeemed;
         
         // Ensure that the redeemed shares are burned
-        Shares.burnShares(sharesRedeemed_);
+        Shares.burnShares(msg.sender, sharesRedeemed_);
 
         // Claim all rewards before completing withdraw prior to making transfers
         Rewarder.claimRewardsFor(msg.sender);

@@ -2,12 +2,12 @@
 
 pragma solidity ^0.8.0;
 
+// This is a generic contract that manages ownership claims for assets on the DAO balance sheet
+// (inside the Treasury Vaults). To start, there will only be two vaults: USDC and DNT.
+
 import "../libraries/StateContract.sol";
 import "./interfaces/VaultSharesV1.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
-// This is a generic contract that manages ownership claims for assets on the DAO balance sheet
-// (inside the Treasury Vaults). To start, there will only be two vaults: USDC and DNT. 
 
 contract VaultShares is ERC20, STATE_VaultShares, StateContract { 
 
@@ -26,7 +26,7 @@ contract VaultShares is ERC20, STATE_VaultShares, StateContract {
     }
  
     function transfer(address recipient_, uint256 amount_) public override onlyApprovedApps returns (bool) {
-        require(msg.sender == _operatorContract, "VaultShares transfer(): only the operator contract is be able to transfer shares");
+        require(msg.sender == _operatorContract, "VaultShares transfer(): only the operator contract is able to transfer shares");
         return super.transfer(recipient_, amount_);
     }
 
@@ -37,12 +37,13 @@ contract VaultShares is ERC20, STATE_VaultShares, StateContract {
 
     // only mint to the vault
     function issueShares(address depositor_, uint256 amount_) external override onlyApprovedApps {
-        require(msg.sender == _vaultContract, "VaultShares issueshares(): only vault contract can issue shares");
+        require(msg.sender == _vaultContract, "VaultShares issueShares(): only vault contract can issue shares");
         _mint(depositor_, amount_);
     }
 
-    function burnShares(uint256 amount_) external override onlyApprovedApps {
-        _burn(msg.sender, amount_);
+    function burnShares(address depositor_, uint256 amount_) external override onlyApprovedApps {
+        require(msg.sender == _vaultContract, "VaultShares burnShares(): only vault contract can burn shares");
+        _burn(depositor_, amount_);
     }
 
     // by only allowing approved applications to transfer shares, we prevent the creation of a secondary market for 
