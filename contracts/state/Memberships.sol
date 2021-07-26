@@ -37,7 +37,6 @@ contract Memberships is STATE_Memberships, StateContract {
     
     function bulkGrantMemberships(address[] calldata newMembers_) external override onlyApprovedApps {
         for (uint16 i = 0; i < newMembers_.length; i++) {
-            console.log(newMembers_[i]);
             isMember[newMembers_[i]] = true;
         }
     } 
@@ -45,7 +44,6 @@ contract Memberships is STATE_Memberships, StateContract {
     function bulkRevokeMemberships(address[] calldata newMembers_) external override onlyApprovedApps {
         for (uint16 i = 0; i < newMembers_.length; i++) {
             isMember[newMembers_[i]] = false;
-            console.log(newMembers_[i]);
         }    
     }
 }

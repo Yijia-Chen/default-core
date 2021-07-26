@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-interface STATE_Epoch {
+interface IEpoch {
     // properties (reads)
     function currentEpoch() external view returns (uint16);
     
