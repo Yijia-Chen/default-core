@@ -54,8 +54,6 @@ contract BalanceSheetMining is APP_BalanceSheetMining, AppContract {
         return true;
     }
 
-    // *** NOTE *** the argument passed in this function is in nominal "tokens_", but the rewards distributed
-    // is in shares. Calculate shares to distribute based on nominal tokens created (issuance/2).
     function issueRewards(uint256 newRewards_) external override onlyApprovedApps returns (bool) {
         _Rewards.distributeRewards(newRewards_);
         return true;

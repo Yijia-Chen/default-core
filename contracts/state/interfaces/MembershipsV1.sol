@@ -10,4 +10,6 @@ interface STATE_Memberships {
     // state changes (writes)
     function grantMembership(address) external;
     function revokeMembership(address) external;
+    function bulkGrantMemberships(address[] calldata) external;
+    function bulkRevokeMemberships(address[] calldata) external;
 }

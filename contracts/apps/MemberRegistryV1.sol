@@ -8,7 +8,7 @@ import "../state/Memberships.sol";
 
 /*
     * *****************************************************************************************************
-    * @dao Membership Requirements for future:
+    * @dao Membership Requirements=:
     
     * To get membership, you need 2 existing members to refer you
     * Existing members need to have X DNT staked to refer. --> Extend existing AppContract Library
@@ -41,6 +41,8 @@ contract MemberRegistry is APP_MemberRegistry, AppContract {
         return true;
     }
 }
+
+// go straight to referrals, no need to make an intermediary contract
 
     // // for V2
     // function refer(address newMember_) external returns (bool) {

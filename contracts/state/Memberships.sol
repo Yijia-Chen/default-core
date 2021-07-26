@@ -26,12 +26,26 @@ contract Memberships is STATE_Memberships, StateContract {
     function getMembers() external override view returns (address[] memory) {
         return _members;
     }
-
-    function grantMembership(address member_) external override onlyApprovedApps {
-        isMember[member_] = true;
+    
+    function grantMembership(address newMember_) external override onlyApprovedApps {
+        isMember[newMember_] = true;
     } 
 
-    function revokeMembership(address member_) external override onlyApprovedApps {
-        isMember[member_] = false;
+    function revokeMembership(address newMember_) external override onlyApprovedApps {
+        isMember[newMember_] = false;
+    } 
+    
+    function bulkGrantMemberships(address[] calldata newMembers_) external override onlyApprovedApps {
+        for (uint16 i = 0; i < newMembers_.length; i++) {
+            console.log(newMembers_[i]);
+            isMember[newMembers_[i]] = true;
+        }
+    } 
+
+    function bulkRevokeMemberships(address[] calldata newMembers_) external override onlyApprovedApps {
+        for (uint16 i = 0; i < newMembers_.length; i++) {
+            isMember[newMembers_[i]] = false;
+            console.log(newMembers_[i]);
+        }    
     }
 }
