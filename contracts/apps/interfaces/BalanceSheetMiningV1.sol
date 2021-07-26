@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-interface APP_DepositMining {
+interface APP_BalanceSheetMining {
     // reads
     function pendingRewards(address depositor_) external view returns (uint256);
 

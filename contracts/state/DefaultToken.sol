@@ -5,13 +5,9 @@ pragma solidity ^0.8.0;
 import "../libraries/StateContract.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract DefaultToken is ERC20, StateContract {
+contract DefaultToken is ERC20("Default Token", "DNT"), StateContract {
 
-    address private _operator; // the address of the operator contract
-
-    constructor(address operator_) ERC20("Default Token", "DNT") {
-        _operator = operator_;
-    }
+    address private _operator = address(0); // the address of the operator contract
 
     // only the operator should mint new tokens
     function mint(uint256 amount_) external onlyApprovedApps {      

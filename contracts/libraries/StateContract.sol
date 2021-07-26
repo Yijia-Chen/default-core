@@ -37,26 +37,8 @@ abstract contract StateContract is Ownable {
     }
 
     function approveApplication(address appContract_) external virtual onlyOwner {
-        // require the approved address to be a contract and not an EOA
-        uint32 size;
-        assembly { size := extcodesize(appContract_) }
-        require(size > 0, "application must be a contract");
-
-        // ****************************** NOTE ***********************************
-        // Do not use the same logic for the inverse validation i.e. ensuring that an
-        // address is NOT a contract "(require size = 0)" because contracts can trick
-        // the validation by calling methods in the constructor (before the contract)
-        // is loaded into the Blockchain. For more information, please review:
-        // https://ethereum.stackexchange.com/questions/15641/how-does-a-contract-find-out-if-another-address-is-a-contract
-        // ***********************************************************************
-
         isApproved[appContract_] = true;
         _approvedApplications.push(appContract_);
-
-        // ****************************** NOTE ***********************************
-        // if you call this, make sure you also call "approvalReceived(this address)" 
-        // on the corresponding application contract.
-        // ***********************************************************************
 
         emit ApprovedApplication(appContract_);
     }

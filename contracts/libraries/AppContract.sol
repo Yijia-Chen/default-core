@@ -56,4 +56,4 @@ abstract contract AppContract is StateContract {
 
         emit ApprovalRevokedFor(contract_);
     }
-}
+ }

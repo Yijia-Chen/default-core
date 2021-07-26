@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./state/Epoch.sol";
 import "./state/Memberships.sol";
 import "./apps/TreasuryVault.sol";
-import "./apps/DepositMining.sol";
+import "./apps/BalanceSheetMining.sol";
 
 interface IERC20Mintable {
     function mint(uint256 amount_) external;
@@ -25,7 +25,7 @@ contract Operator is Ownable {
 
     // APP INTEGRATIONS
     TreasuryVault private _DntVault;
-    DepositMining private _DepositMining;
+    BalanceSheetMining private _BalanceSheetMining;
 
     // INTERNAL VARIABLES
     address private _contributorPurse = address(0);
@@ -38,7 +38,7 @@ contract Operator is Ownable {
         IERC20Mintable defaultToken_,
         IERC20 dntVaultShares_,
         TreasuryVault dntVault_,
-        DepositMining depositMining_
+        BalanceSheetMining balanceSheetMining_
     ) {
         _setContributorPurse(contributorPurse_);
         _Epoch = epoch_;
@@ -46,7 +46,7 @@ contract Operator is Ownable {
         _DefaultToken = defaultToken_;
         _DntVault = dntVault_;
         _DntVaultShares = dntVaultShares_;
-        _DepositMining = depositMining_;
+        _BalanceSheetMining = balanceSheetMining_;
     }
 
     function changeContributorPurse(address contributorPurse_) external onlyOwner {
@@ -67,7 +67,7 @@ contract Operator is Ownable {
         uint256 dntSharesForMiningRewards = _DntVaultShares.balanceOf(address(this)) / 2;
         
         _DntVaultShares.transfer(_contributorPurse, dntSharesForMiningRewards);
-        _DepositMining.issueRewards(dntSharesForMiningRewards);
+        _BalanceSheetMining.issueRewards(dntSharesForMiningRewards);
 
         // transfer the remaining half of the shares to be minted to the contributor purse
         _DntVaultShares.transfer(_contributorPurse, _DntVaultShares.balanceOf(address(this)));

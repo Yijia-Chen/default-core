@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "../libraries/AppContract.sol";
-import "./interfaces/DepositMiningV1.sol";
+import "./interfaces/BalanceSheetMiningV1.sol";
 import "../state/ClaimableRewards.sol";
 import "../state/Memberships.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -14,7 +14,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
     // Have fun reading it. Hopefully it's bug-free. God bless.
 
-contract DepositMining is APP_DepositMining, AppContract {
+contract BalanceSheetMining is APP_BalanceSheetMining, AppContract {
 
     // MANAGED STATE
     ClaimableRewards private _Rewards; // the balance sheet mining contract, our rewards program for depositors.
@@ -25,9 +25,10 @@ contract DepositMining is APP_DepositMining, AppContract {
     // for eligibility. This means only members that deposit directly into the Vault have access to rewards. 
     // This also helps cleanly separate contracts handling vault logic vs rewards logic.
 
-    constructor(IERC20 usdcVaultShares_, IERC20 dntVaultShares_, Memberships memberships_) AppContract(memberships_) {
+    constructor(IERC20 usdcVaultShares_, IERC20 dntVaultShares_, ClaimableRewards rewards_, Memberships memberships_) AppContract(memberships_) {
         _UsdcVaultShares = usdcVaultShares_;
         _DntVaultShares = dntVaultShares_;
+        _Rewards = rewards_;
     }
 
     function pendingRewards(address depositor_) public view override returns (uint256) {
