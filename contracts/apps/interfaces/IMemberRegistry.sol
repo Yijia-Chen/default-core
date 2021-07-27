@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-interface APP_MemberRegistry {
+interface IMemberRegistry {
     // writes
     function grantMembership(address member_) external returns (bool);
     function revokeMembership(address member_) external returns (bool);

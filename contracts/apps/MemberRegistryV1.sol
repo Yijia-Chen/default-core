@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "../libraries/AppContract.sol";
-import "../apps/interfaces/MemberRegistryV1.sol";
+import "../apps/interfaces/IMemberRegistry.sol";
 import "../state/Memberships.sol";
 
 /*
@@ -16,7 +16,7 @@ import "../state/Memberships.sol";
     * *****************************************************************************************************
     */ 
 
-contract MemberRegistry is APP_MemberRegistry, AppContract {
+contract MemberRegistry is IMemberRegistry, AppContract {
     
     // MANAGED STATE
     Memberships private _Memberships;

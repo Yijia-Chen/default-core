@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "../libraries/AppContract.sol";
-import "./interfaces/BalanceSheetMiningV1.sol";
+import "./interfaces/IBalanceSheetMining.sol";
 import "../state/ClaimableRewards.sol";
 import "../state/Memberships.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -14,7 +14,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
     // Have fun reading it. Hopefully it's bug-free. God bless.
 
-contract BalanceSheetMining is APP_BalanceSheetMining, AppContract {
+contract BalanceSheetMining is IBalanceSheetMining, AppContract {
 
     // MANAGED STATE
     ClaimableRewards private _Rewards; // the balance sheet mining contract, our rewards program for depositors.

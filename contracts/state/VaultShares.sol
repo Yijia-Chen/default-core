@@ -6,7 +6,7 @@ pragma solidity ^0.8.0;
 // (inside the Treasury Vaults). To start, there will only be two vaults: USDC and DNT.
 
 import "../libraries/StateContract.sol";
-import "./interfaces/VaultSharesV1.sol";
+import "./interfaces/IVaultShares.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract VaultShares is ERC20, STATE_VaultShares, StateContract { 

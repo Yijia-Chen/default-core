@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "../libraries/StateContract.sol";
-import "./interfaces/ClaimableRewardsV1.sol";
+import "./interfaces/IClaimableRewards.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // The state for claimable rewards from the Rewarder contract please see contracts/application/RewarderV1.sol.
@@ -33,7 +33,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // For formal paper for this strategy, see: https://uploads-ssl.webflow.com/5ad71ffeb79acc67c8bcdaba/5ad8d1193a40977462982470_scalable-reward-distribution-paper.pdf
 
-contract ClaimableRewards is STATE_ClaimableRewards, StateContract {
+contract ClaimableRewards is IClaimableRewards, StateContract {
 
     IERC20 public override rewardToken; // DNT-VS => vault shares of the native Treasury Vault (DNT)
     IERC20 public override depositorShares; // USDC-VS => vault shares of the incentivized Treasury Vault (USDC)
@@ -41,9 +41,9 @@ contract ClaimableRewards is STATE_ClaimableRewards, StateContract {
     uint256 public override reservedRewards = 0; // the amount of tokens in this address that are reserved for distribution from previous distributions.
     mapping(address => uint256) public override ineligibleRewards; // previously user.rewardDebt in the Masterchef Contract
 
-    constructor(IERC20 rewardToken_, IERC20 depositorShares_) {
-        rewardToken = rewardToken_;
+    constructor(IERC20 depositorShares_, IERC20 rewardToken_) {
         depositorShares = depositorShares_;
+        rewardToken = rewardToken_;
     }
 
     // reset the amount of rewards accumulated so far by the the depositor's shares

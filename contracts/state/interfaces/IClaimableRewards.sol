@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-interface STATE_ClaimableRewards {
+interface IClaimableRewards {
     // properties (reads)
     function rewardToken() external view returns (IERC20);
     function depositorShares() external view returns (IERC20);
