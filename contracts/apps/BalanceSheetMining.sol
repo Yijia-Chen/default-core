@@ -17,45 +17,45 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract BalanceSheetMining is IBalanceSheetMining, AppContract {
 
     // MANAGED STATE
-    ClaimableRewards private _Rewards; // the balance sheet mining contract, our rewards program for depositors.
-    IERC20 private _UsdcVaultShares; // the usdc vault shares contract, we give owners of these some dnt vault share rewards too!
-    IERC20 private _DntVaultShares; // the dnt vault shares contract, our reward token.
+    ClaimableRewards public Rewards; // the balance sheet mining contract, our rewards program for depositors.
+    IERC20 public UsdcVaultShares; // the usdc vault shares contract, we give owners of these some dnt vault share rewards too!
+    IERC20 public DntVaultShares; // the dnt vault shares contract, our reward token.
 
     // Because the vault is a separate contract, our USDC vault registers the deposit to this rewarder
     // for eligibility. This means only members that deposit directly into the Vault have access to rewards. 
     // This also helps cleanly separate contracts handling vault logic vs rewards logic.
 
     constructor(IERC20 usdcVaultShares_, IERC20 dntVaultShares_, ClaimableRewards rewards_, Memberships memberships_) AppContract(memberships_) {
-        _UsdcVaultShares = usdcVaultShares_;
-        _DntVaultShares = dntVaultShares_;
-        _Rewards = rewards_;
+        UsdcVaultShares = usdcVaultShares_;
+        DntVaultShares = dntVaultShares_;
+        Rewards = rewards_;
     }
 
     function pendingRewards(address depositor_) public view override returns (uint256) {
-        uint256 historicallyAccumulatedRewards = _UsdcVaultShares.balanceOf(depositor_) * _Rewards.accRewardsPerShare();
-        uint256 rewardsToDistribute = historicallyAccumulatedRewards - _Rewards.ineligibleRewards(depositor_);
+        uint256 totalHistoricalRewards = UsdcVaultShares.balanceOf(depositor_) * Rewards.accRewardsPerShare();
+        uint256 finalDepositorRewards = (totalHistoricalRewards - Rewards.ineligibleRewards(depositor_)) / Rewards.decimalMultiplier();
 
-        // just in case somehow rounding error causes rewardsToDistribute to exceed the balance of the tokens in the contract
-        if ( rewardsToDistribute > _DntVaultShares.balanceOf(address(this)) ) {
-             rewardsToDistribute = _DntVaultShares.balanceOf(address(this));
+        // just in case somehow rounding error causes finalDepositorRewards to exceed the balance of the tokens in the contract
+        if ( finalDepositorRewards > DntVaultShares.balanceOf(address(this)) ) {
+             finalDepositorRewards = DntVaultShares.balanceOf(address(this));
         }
-        return rewardsToDistribute;
+        return finalDepositorRewards;
     }
 
     function register(address depositor_) external override onlyApprovedApps returns (bool) {
-        _Rewards.resetClaimableRewards(depositor_);
+        Rewards.resetClaimableRewards(depositor_);
         return true;
     }
 
     function claimRewardsFor(address redeemer_) external override returns (bool) {
         uint rewards = pendingRewards(redeemer_);
-        _Rewards.resetClaimableRewards(redeemer_);
-        _DntVaultShares.transfer(redeemer_, rewards);
+        Rewards.resetClaimableRewards(redeemer_);
+        DntVaultShares.transfer(redeemer_, rewards);
         return true;
     }
 
     function issueRewards(uint256 newRewards_) external override onlyApprovedApps returns (bool) {
-        _Rewards.distributeRewards(newRewards_);
+        Rewards.distributeRewards(newRewards_);
         return true;
     }
 }

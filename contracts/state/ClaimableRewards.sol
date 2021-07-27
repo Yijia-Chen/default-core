@@ -37,9 +37,9 @@ contract ClaimableRewards is IClaimableRewards, StateContract {
 
     IERC20 public override rewardToken; // DNT-VS => vault shares of the native Treasury Vault (DNT)
     IERC20 public override depositorShares; // USDC-VS => vault shares of the incentivized Treasury Vault (USDC)
-    uint256 public override accRewardsPerShare = 0; // the total amount of rewardsPerShare accumulated from the start of the rewards program.
-    uint256 public override reservedRewards = 0; // the amount of tokens in this address that are reserved for distribution from previous distributions.
+    uint256 public override accRewardsPerShare = 0; // the total amount of rewardsPerShare accumulated from the start of the rewards program, times 1e12
     mapping(address => uint256) public override ineligibleRewards; // previously user.rewardDebt in the Masterchef Contract
+    uint256 public constant override decimalMultiplier = 1e16; // decimal offset on the accRewardsPerShare, since there's no floats in eth.
 
     constructor(IERC20 depositorShares_, IERC20 rewardToken_) {
         depositorShares = depositorShares_;
@@ -53,6 +53,13 @@ contract ClaimableRewards is IClaimableRewards, StateContract {
 
     // update the amount of rewards accumulated by each incentivized share
     function distributeRewards(uint256 newRewards_) external override onlyApprovedApps {
-        accRewardsPerShare += newRewards_/depositorShares.totalSupply();
+        require(depositorShares.totalSupply() > 0, "ClaimableRewards distributeRewards(): USDC Treasury Vault cannot be empty");
+        accRewardsPerShare += newRewards_ * decimalMultiplier / depositorShares.totalSupply();
+
+        // @dev note:
+        // There will always be some precision issues due to rounding errors. In solidity, integer
+        // division always rounds towards zero, so 7.9 -> 7. This means that the rewards contract
+        // will always distribute ever slightly fewer shares than it receives, so it collects some dust
+        // over time.
     }
 }

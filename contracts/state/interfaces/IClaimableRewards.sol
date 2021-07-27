@@ -9,8 +9,8 @@ interface IClaimableRewards {
     function rewardToken() external view returns (IERC20);
     function depositorShares() external view returns (IERC20);
     function accRewardsPerShare() external view returns (uint256);
-    function reservedRewards() external view returns (uint256);
     function ineligibleRewards(address depositor_) external view returns (uint256);
+    function decimalMultiplier() external view returns (uint256);
 
     // state changes (writes)
     function resetClaimableRewards(address depositor_) external;
