@@ -33,24 +33,27 @@ describe("ClaimableRewards.sol", function () {
 
     expect(await this.rewards.accRewardsPerShare()).to.equal(0);
     expect(await this.rewards.reservedRewards()).to.equal(0);
+
+    expect(await this.rewards.ineligibleRewards(this.devAddr)).to.equal(0);
+    expect(await this.rewards.ineligibleRewards('0x0')).to.equal(0);
   })
 
-//   it("should set correct ownership permissions", async function () {
-//     // random user cannot call the contract
-//     const userOneCalls = this.epoch.connect(this.userOne);
-//     await expect(userOneCalls.incrementEpoch()).to.be.revertedWith("StateContract onlyApprovedApps(): Application is not approved to call this contract");
-//     await expect(userOneCalls.resetEpoch()).to.be.revertedWith("StateContract onlyApprovedApps(): Application is not approved to call this contract");
-//   })
+  it("should set correct ownership permissions", async function () {
+    // random user cannot call the contract
+    const userOneCalls = this.rewards.connect(this.userOne);
+    await expect(userOneCalls.resetClaimableRewards()).to.be.revertedWith("StateContract onlyApprovedApps(): Application is not approved to call this contract");
+    await expect(userOneCalls.resetEpoch()).to.be.revertedWith("StateContract onlyApprovedApps(): Application is not approved to call this contract");
+  })
 
-//   it("should properly increment the epoch", async function() {
-//     // approve and set up the app contract (as the multisig)
-//     await this.epoch.approveApplication(this.daoMultisig.address);
-//     const approvedAppCalls = this.epoch.connect(this.daoMultisig);
+  it("should properly increment the epoch", async function() {
+    // approve and set up the app contract (as the multisig)
+    await this.epoch.approveApplication(this.daoMultisig.address);
+    const approvedAppCalls = this.epoch.connect(this.daoMultisig);
 
-//     await approvedAppCalls.incrementEpoch();
-//     expect(await this.epoch.currentEpoch()).to.equal(1);
+    await approvedAppCalls.incrementEpoch();
+    expect(await this.epoch.currentEpoch()).to.equal(1);
 
-//     await approvedAppCalls.resetEpoch();
-//     expect(await this.epoch.currentEpoch()).to.equal(0);
-//   })
+    await approvedAppCalls.resetEpoch();
+    expect(await this.epoch.currentEpoch()).to.equal(0);
+  })
 })
