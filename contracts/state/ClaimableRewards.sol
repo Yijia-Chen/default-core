@@ -39,7 +39,7 @@ contract ClaimableRewards is IClaimableRewards, StateContract {
     IERC20 public override depositorShares; // USDC-VS => vault shares of the incentivized Treasury Vault (USDC)
     uint256 public override accRewardsPerShare = 0; // the total amount of rewardsPerShare accumulated from the start of the rewards program, times 1e12
     mapping(address => uint256) public override ineligibleRewards; // previously user.rewardDebt in the Masterchef Contract
-    uint256 public constant override decimalMultiplier = 1e16; // decimal offset on the accRewardsPerShare, since there's no floats in eth.
+    uint256 public constant override decimalMultiplier = 1e12; // decimal offset on the accRewardsPerShare, since there's no floats in eth.
 
     constructor(IERC20 depositorShares_, IERC20 rewardToken_) {
         depositorShares = depositorShares_;

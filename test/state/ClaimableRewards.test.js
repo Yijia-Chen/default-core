@@ -22,9 +22,6 @@ describe("ClaimableRewards.sol", function () {
     this.dntShares = await this.VaultShares.deploy("DNT Vault Shares", "DNT-VS", 18);
     await this.dntShares.deployed();
     await this.usdcShares.deployed();
-    await this.usdcShares.approveApplication(this.operator.address);
-    await this.usdcShares.connect(this.operator).issueShares(this.userOne.address, 1000);
-    await this.usdcShares.connect(this.operator).issueShares(this.devAddr.address, 1007);
 
     this.rewards = await this.ClaimableRewards.deploy(this.usdcShares.address, this.dntShares.address);
     await this.rewards.deployed();
@@ -47,31 +44,43 @@ describe("ClaimableRewards.sol", function () {
     await expect(userOneCalls.distributeRewards(1000)).to.be.revertedWith("StateContract onlyApprovedApps(): Application is not approved to call this contract");
 
     await this.rewards.approveApplication(this.operator.address);
+    await this.usdcShares.approveApplication(this.operator.address);
+    await this.usdcShares.connect(this.operator).issueShares(this.userOne.address, 1000);
+      
     const operatorCalls = this.rewards.connect(this.operator);
     await expect(operatorCalls.resetClaimableRewards(this.devAddr.address)).not.to.be.reverted;
     await expect(operatorCalls.distributeRewards(1000)).not.to.be.reverted;
   })
+  
+  context("when distributing rewards", async function() {
 
-  it("should properly distribute rewards", async function() {
-    await this.rewards.approveApplication(this.operator.address);
-    const operatorCalls = this.rewards.connect(this.operator);
-    await operatorCalls.distributeRewards(5);
-    const decimalMultiplier = await this.rewards.decimalMultiplier(); // -> currently 1e16
+    it("should only distribute rewards if there's assets in the Treasury Vault", async function() {
+      await this.rewards.approveApplication(this.operator.address);
+      await expect(this.rewards.connect(this.operator).distributeRewards(5)).to.be.revertedWith("ClaimableRewards distributeRewards(): USDC Treasury Vault cannot be empty");
+    })
+    
+    it("should properly increment the accRewardsPerShare and update ineglible rewards mapping", async function() {
+      await this.usdcShares.approveApplication(this.operator.address);
+      await this.usdcShares.connect(this.operator).issueShares(this.userOne.address, 1000);
+      await this.usdcShares.connect(this.operator).issueShares(this.devAddr.address, 1000);
 
-    const expectedReward = 5 / 2007;
-    expect(await this.rewards.accRewardsPerShare()).to.equal(expectedReward);
-    // await operatorCalls.distributeRewards(500);
-    // expect(await this.rewards.accRewardsPerShare()).to.equal(1);
+      await this.rewards.approveApplication(this.operator.address);
+      const operatorCalls = this.rewards.connect(this.operator);
+      await operatorCalls.distributeRewards(5);
+      const decimalMultiplier = await this.rewards.decimalMultiplier(); // -> currently 1e12
+  
+      expect(await this.rewards.accRewardsPerShare()).to.equal(5 * decimalMultiplier / 2000);
+      expect(await this.rewards.ineligibleRewards(this.userOne.address)).to.equal(0);
+      expect(await this.rewards.ineligibleRewards(this.devAddr.address)).to.equal(0);
+
+      await operatorCalls.resetClaimableRewards(this.userOne.address);
+      expect(await this.rewards.ineligibleRewards(this.userOne.address)).to.equal(1000 * 5 * decimalMultiplier / 2000);
+      expect(await this.rewards.ineligibleRewards(this.devAddr.address)).to.equal(0);
+
+      await operatorCalls.resetClaimableRewards(this.devAddr.address);
+      expect(await this.rewards.ineligibleRewards(this.devAddr.address)).to.equal(1000 * 5 * decimalMultiplier / 2000);
 
 
-    // // approve and set up the app contract (as the multisig)
-    // await this.epoch.approveApplication(this.daoMultisig.address);
-    // const approvedAppCalls = this.epoch.connect(this.daoMultisig);
-
-    // await approvedAppCalls.incrementEpoch();
-    // expect(await this.epoch.currentEpoch()).to.equal(1);
-
-    // await approvedAppCalls.resetEpoch();
-    // expect(await this.epoch.currentEpoch()).to.equal(0);
+    })
   })
 })
