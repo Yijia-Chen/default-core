@@ -19,36 +19,21 @@ Our contract architecture is broken down into different pieces:
 
 -----
 
-1. State Contracts
-- These contracts are immutable and represent source of truth data for the DAO.
-- State Contracts are always Ownable, and they are owned by the application contracts that can change state
-    - In the future if there are multiple applications that can change state, upgrade the modifier library so that
-    - there can be an array of owners (whitelisted applications)
-- If we want to improve state we should extend existing storage, keeping state immutability is critical.
+Don't think about State Contracts/App contracts -> 
 
-- State contracts have PUBLIC variables and WRITE functions only.
-  - public variables -> return
-  - public functions -> no return
-- Complex views (queries) are created in the app contracts by reading from the state variables.
-- no events (events are for indexing instances of application logic execution)
+Modules (self contained state + logic) --> Apps (Composers for a type of user)
 
-2. Application Contracts
-- These contracts can be rotated and upgraded. During upgrade, change the ownership of the state contracts
-  to the application contracts
-- These contracts are versioned
-- State contracts are underscore Capitalized & always _private
-- Events are defined on applications
+Modules:
+- treasury vault
+- default token
+- membership
+- balance sheet mining
 
-3. Interfaces
-- State Interfaces: Define reads & writes for the state contract.
-  - reads: MUST BE Public VARIABLES
-  - writes: MUST BE SIMPLE ATOMIC TRANSACTIONS (NO BUSINESS LOGIC)
+Apps:
 
-- App Interfaces: Define reads & writes for the logic & events.
-
-4. Operator
-- Defines the "era" or "main version" of the DAO protocol. E.g. Default v0.1 or Default v1.0 (for major releases)
-
+- User: deposit Usdc (deposit + register), withdraw (withdraw + claim), claim (only claim)
+- Operator: grant membership, incrementEpoch, bulkTransfer
+- [LATER] Deployers (change ownership, register app, configuration, upgrades, etc.) -> Eventually used in governance
 
 -----
 
