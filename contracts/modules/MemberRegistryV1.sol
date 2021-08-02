@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "../libraries/AppContract.sol";
-import "../apps/interfaces/IMemberRegistry.sol";
+import "./interfaces/IMemberRegistry.sol";
 import "../state/Memberships.sol";
 
 /*
@@ -16,16 +16,20 @@ import "../state/Memberships.sol";
     * *****************************************************************************************************
     */ 
 
-contract MemberRegistry is IMemberRegistry, AppContract {
+contract MemberRegistryV1 is IMemberRegistry {
     
     // MANAGED STATE
     Memberships private _Memberships;
 
-    constructor(Memberships memberships_) AppContract(memberships_) {
+    constructor(Memberships memberships_) {
         _Memberships = memberships_;
     }
 
-    function grantMembership(address member_) external override onlyOwner returns (bool) {
+    function isMember(address address_) external view returns (bool) {
+        return _Memberships.isMember(address_);
+    }
+
+    function grantMembership(address member_) external override returns (bool) {
         _Memberships.grantMembership(member_);
 
         emit MembershipGranted(member_);
@@ -33,7 +37,7 @@ contract MemberRegistry is IMemberRegistry, AppContract {
         return true;
     }
 
-    function revokeMembership(address member_) external override onlyOwner returns (bool) {
+    function revokeMembership(address member_) external override returns (bool) {
         _Memberships.revokeMembership(member_);
 
         emit MembershipRevoked(member_);

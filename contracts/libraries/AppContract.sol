@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "./StateContract.sol";
+import "./Permissioned.sol";
 import "../state/Memberships.sol";
 
 /**
@@ -16,7 +16,7 @@ import "../state/Memberships.sol";
  * certain member.
  */
 
-abstract contract AppContract is StateContract {
+abstract contract AppContract is Permissioned {
     event ReceivedApprovalFor(address indexed contract_);
     event ApprovalRevokedFor(address indexed contract_);
     

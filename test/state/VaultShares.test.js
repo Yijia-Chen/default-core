@@ -27,10 +27,10 @@ describe("VaultShares.sol", function () {
   it("should set correct ownership permissions", async function () {
     // random user cannot call the contract
     const userOneCalls = this.fakeShares.connect(this.userOne);
-    await expect(userOneCalls.transfer(this.devAddr.address, 0)).to.be.revertedWith("StateContract onlyApprovedApps(): Application is not approved to call this contract");
-    await expect(userOneCalls.transferFrom(this.daoMultisig.address, this.devAddr.address, 0)).to.be.revertedWith("StateContract onlyApprovedApps(): Application is not approved to call this contract");
-    await expect(userOneCalls.issueShares(this.devAddr.address, 0)).to.be.revertedWith("StateContract onlyApprovedApps(): Application is not approved to call this contract");
-    await expect(userOneCalls.burnShares(this.daoMultisig.address, 0)).to.be.revertedWith("StateContract onlyApprovedApps(): Application is not approved to call this contract");
+    await expect(userOneCalls.transfer(this.devAddr.address, 0)).to.be.revertedWith("Permissioned onlyApprovedApps(): Application is not approved to call this contract");
+    await expect(userOneCalls.transferFrom(this.daoMultisig.address, this.devAddr.address, 0)).to.be.revertedWith("Permissioned onlyApprovedApps(): Application is not approved to call this contract");
+    await expect(userOneCalls.issueShares(this.devAddr.address, 0)).to.be.revertedWith("Permissioned onlyApprovedApps(): Application is not approved to call this contract");
+    await expect(userOneCalls.burnShares(this.daoMultisig.address, 0)).to.be.revertedWith("Permissioned onlyApprovedApps(): Application is not approved to call this contract");
   })
 
   it("should set correct ownership permissions", async function () {
@@ -38,9 +38,9 @@ describe("VaultShares.sol", function () {
     await this.fakeShares.approveApplication(this.vault.address);
 
     // only the operator can transfer tokens
-    const vaultCalls = this.fakeShares.connect(this.vault);
-    await expect(vaultCalls.transfer(this.devAddr.address, 0)).to.be.revertedWith("VaultShares transfer(): only the operator contract is able to transfer shares");
-    await expect(vaultCalls.transferFrom(this.daoMultisig.address, this.devAddr.address, 0)).to.be.revertedWith("VaultShares transferFrom(): only the operator contract is able to transfer shares");
+    // const vaultCalls = this.fakeShares.connect(this.vault);
+    // await expect(vaultCalls.transfer(this.devAddr.address, 0)).to.be.revertedWith("VaultShares transfer(): only the operator contract is able to transfer shares");
+    // await expect(vaultCalls.transferFrom(this.daoMultisig.address, this.devAddr.address, 0)).to.be.revertedWith("VaultShares transferFrom(): only the operator contract is able to transfer shares");
 
     // only the vault can issue/burn shares
     const operatorCalls = this.fakeShares.connect(this.operator);
@@ -50,11 +50,10 @@ describe("VaultShares.sol", function () {
     // only the owner can successfully change the operator contract
     await this.fakeShares.transferOwnership(this.daoMultisig.address);
     const multisigCalls = this.fakeShares.connect(this.daoMultisig);
-    await multisigCalls.setOperatorContract(this.newOperator.address);
     await multisigCalls.approveApplication(this.newOperator.address);
 
-    await expect(operatorCalls.transfer(this.devAddr.address, 0)).to.be.revertedWith("VaultShares transfer(): only the operator contract is able to transfer shares");
-    await expect(operatorCalls.transferFrom(this.daoMultisig.address, this.devAddr.address, 0)).to.be.revertedWith("VaultShares transferFrom(): only the operator contract is able to transfer shares");
+    // await expect(operatorCalls.transfer(this.devAddr.address, 0)).to.be.revertedWith("VaultShares transfer(): only the operator contract is able to transfer shares");
+    // await expect(operatorCalls.transferFrom(this.daoMultisig.address, this.devAddr.address, 0)).to.be.revertedWith("VaultShares transferFrom(): only the operator contract is able to transfer shares");
 
     const newOperatorCalls = this.fakeShares.connect(this.newOperator);
     await expect(newOperatorCalls.transfer(this.devAddr.address, 0)).not.to.be.reverted;
@@ -86,7 +85,6 @@ describe("VaultShares.sol", function () {
     // approve and set up the app contract (as the multisig)
     await this.fakeShares.approveApplication(this.operator.address);
     await this.fakeShares.approveApplication(this.vault.address);
-    await this.fakeShares.setOperatorContract(this.operator.address);
 
     const vaultCalls = this.fakeShares.connect(this.vault);
     await vaultCalls.issueShares(this.operator.address, 1000);

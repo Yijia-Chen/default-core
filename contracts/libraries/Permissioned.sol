@@ -19,7 +19,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * managing state. 
  */
 
-abstract contract StateContract is Ownable {
+abstract contract Permissioned is Ownable {
     event ApprovedApplication(address indexed contract_);
     event RevokedApplication(address indexed contract_);
 
@@ -32,7 +32,7 @@ abstract contract StateContract is Ownable {
     address[] private _approvedApplications;
 
     modifier onlyApprovedApps() {
-        require(isApproved[msg.sender], "StateContract onlyApprovedApps(): Application is not approved to call this contract");
+        require(isApproved[msg.sender], "Permissioned onlyApprovedApps(): Application is not approved to call this contract");
         _;
     }
 

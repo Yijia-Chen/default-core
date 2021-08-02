@@ -40,8 +40,8 @@ describe("ClaimableRewards.sol", function () {
   it("should set correct ownership permissions", async function () {
     // random user cannot call the contract
     const userOneCalls = this.rewards.connect(this.userOne);
-    await expect(userOneCalls.resetClaimableRewards(this.devAddr.address)).to.be.revertedWith("StateContract onlyApprovedApps(): Application is not approved to call this contract");
-    await expect(userOneCalls.distributeRewards(1000)).to.be.revertedWith("StateContract onlyApprovedApps(): Application is not approved to call this contract");
+    await expect(userOneCalls.resetClaimableRewards(this.devAddr.address)).to.be.revertedWith("Permissioned onlyApprovedApps(): Application is not approved to call this contract");
+    await expect(userOneCalls.distributeRewards(1000)).to.be.revertedWith("Permissioned onlyApprovedApps(): Application is not approved to call this contract");
 
     await this.rewards.approveApplication(this.operator.address);
     await this.usdcShares.approveApplication(this.operator.address);

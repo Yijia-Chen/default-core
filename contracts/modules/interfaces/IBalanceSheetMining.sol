@@ -9,5 +9,5 @@ interface IBalanceSheetMining {
     // writes
     function register(address redeemer_) external returns (bool);
     function claimRewardsFor(address redeemer_) external returns (bool);
-    function issueRewards(uint256 shares_) external returns (bool);
+    function issueRewards(uint256 newRewards_) external returns (bool);
 }

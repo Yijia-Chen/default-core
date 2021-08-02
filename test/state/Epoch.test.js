@@ -27,8 +27,8 @@ describe("Epoch.sol", function () {
   it("should set correct ownership permissions", async function () {
     // random user cannot call the contract
     const userOneCalls = this.epoch.connect(this.userOne);
-    await expect(userOneCalls.incrementEpoch()).to.be.revertedWith("StateContract onlyApprovedApps(): Application is not approved to call this contract");
-    await expect(userOneCalls.resetEpoch()).to.be.revertedWith("StateContract onlyApprovedApps(): Application is not approved to call this contract");
+    await expect(userOneCalls.incrementEpoch()).to.be.revertedWith("Permissioned onlyApprovedApps(): Application is not approved to call this contract");
+    await expect(userOneCalls.resetEpoch()).to.be.revertedWith("Permissioned onlyApprovedApps(): Application is not approved to call this contract");
   })
 
   it("should properly increment the epoch", async function() {

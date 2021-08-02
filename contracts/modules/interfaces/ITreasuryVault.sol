@@ -7,8 +7,8 @@ interface ITreasuryVault {
     function pricePerShare() external returns (uint256);
 
     // writes
-    function withdraw(uint256 amount) external returns (bool);
-    function deposit(uint256 amount) external returns (bool);
+    function withdraw(address depositor_, uint256 amount) external returns (bool);
+    function deposit(address depositor_, uint256 amount) external returns (uint256);
     function borrow(uint256 amount) external returns (bool);
     function repay(uint256 amount) external returns (bool);
     function setFee(uint8 percentage) external returns (bool);

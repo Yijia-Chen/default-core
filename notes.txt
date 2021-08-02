@@ -23,11 +23,21 @@ Don't think about State Contracts/App contracts ->
 
 Modules (self contained state + logic) --> Apps (Composers for a type of user)
 
+States:
+- Memberships
+- VaultShares
+- DefaultToken
+
 Modules:
-- treasury vault
-- default token
-- membership
-- balance sheet mining
+- treasury vault:
+    - Asset
+    - Vault Share
+- registry:
+    - Memberships
+- balance sheet mining:
+    - Vault Share (asset)
+    - Vault Share (reward)
+    - Default Token (minting)
 
 Apps:
 

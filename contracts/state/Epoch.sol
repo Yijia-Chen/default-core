@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.0;
 
-import "../libraries/StateContract.sol";
+import "../libraries/Permissioned.sol";
 import "./interfaces/IEpoch.sol";
 
-contract Epoch is IEpoch, StateContract {
+contract Epoch is IEpoch, Permissioned {
     
     uint16 public override currentEpoch = 0; // assuming weekly epochs, 16 bytes ~ 1,260 years (2**16/52)
 

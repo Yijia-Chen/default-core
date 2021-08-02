@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.0;
 
-import "../libraries/StateContract.sol";
+import "../libraries/Permissioned.sol";
 import "./interfaces/IMemberships.sol";
 
-contract Memberships is IMemberships, StateContract {
+contract Memberships is IMemberships, Permissioned {
 
     // primary state: checking if an address belongs to a member of the DAO.
     mapping(address => bool) public override isMember;

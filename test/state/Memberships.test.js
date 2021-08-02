@@ -34,10 +34,10 @@ describe("Membership.sol", function () {
   it("should set correct ownership permissions", async function () {
     // random user cannot call the contract
     const userOneCalls = this.memberships.connect(this.userOne);
-    await expect(userOneCalls.grantMembership(this.userOne.address)).to.be.revertedWith("StateContract onlyApprovedApps(): Application is not approved to call this contract");
-    await expect(userOneCalls.revokeMembership(this.userOne.address)).to.be.revertedWith("StateContract onlyApprovedApps(): Application is not approved to call this contract");
-    await expect(userOneCalls.bulkGrantMemberships([])).to.be.revertedWith("StateContract onlyApprovedApps(): Application is not approved to call this contract");
-    await expect(userOneCalls.bulkRevokeMemberships([])).to.be.revertedWith("StateContract onlyApprovedApps(): Application is not approved to call this contract");
+    await expect(userOneCalls.grantMembership(this.userOne.address)).to.be.revertedWith("Permissioned onlyApprovedApps(): Application is not approved to call this contract");
+    await expect(userOneCalls.revokeMembership(this.userOne.address)).to.be.revertedWith("Permissioned onlyApprovedApps(): Application is not approved to call this contract");
+    await expect(userOneCalls.bulkGrantMemberships([])).to.be.revertedWith("Permissioned onlyApprovedApps(): Application is not approved to call this contract");
+    await expect(userOneCalls.bulkRevokeMemberships([])).to.be.revertedWith("Permissioned onlyApprovedApps(): Application is not approved to call this contract");
   })
 
   it("should properly approve applications", async function() {
