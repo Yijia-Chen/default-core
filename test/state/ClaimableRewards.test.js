@@ -19,17 +19,17 @@ describe("ClaimableRewards.sol", function () {
   beforeEach(async function () {
     // pretend devAddr is the vault for these shares.
     this.usdcShares = await this.VaultShares.deploy("USDC Vault Shares", "USDC-VS", 6);
-    this.dntShares = await this.VaultShares.deploy("DNT Vault Shares", "DNT-VS", 18);
-    await this.dntShares.deployed();
+    this.defShares = await this.VaultShares.deploy("DNT Vault Shares", "DNT-VS", 18);
+    await this.defShares.deployed();
     await this.usdcShares.deployed();
 
-    this.rewards = await this.ClaimableRewards.deploy(this.usdcShares.address, this.dntShares.address);
+    this.rewards = await this.ClaimableRewards.deploy(this.usdcShares.address, this.defShares.address);
     await this.rewards.deployed();
   })  
 
   it("should set correct state variables", async function () {
     expect(await this.rewards.owner()).to.equal(this.devAddr.address);
-    expect(await this.rewards.rewardToken()).to.equal(this.dntShares.address);
+    expect(await this.rewards.rewardToken()).to.equal(this.defShares.address);
     expect(await this.rewards.depositorShares()).to.equal(this.usdcShares.address);
 
     expect(await this.rewards.accRewardsPerShare()).to.equal(0);
