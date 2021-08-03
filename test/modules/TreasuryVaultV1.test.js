@@ -29,7 +29,6 @@ describe("TreasuryVault.sol", function () {
     // mint tokens
     const ownerCalls = this.token.connect(this.devAddr);
     await ownerCalls.approveApplication(this.devAddr.address);
-    await ownerCalls.changeOperator(this.devAddr.address);
     await ownerCalls.mint(1700000);
     await ownerCalls.transfer(this.userOne.address, 1000000);
   })  

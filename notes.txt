@@ -1,5 +1,14 @@
 Design Principles
 
+1. Prioritize readability, developer experience, and auditability. 
+   Do not prioritize (to the extent that is practical) gas costs, because presumably those will go down over time.
+
+2. Easily for front-ends to integrate into: intuitive contract interfaces (both for humans and computers).
+
+
+
+-------
+
 1. Keep logic tight. Don't cut corners. Keep state where it should exist. 
 2. Keep code functionality modular. Contracts should be small and state changes basic.
 

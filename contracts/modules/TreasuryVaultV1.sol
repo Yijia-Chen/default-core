@@ -33,7 +33,7 @@ contract TreasuryVaultV1 is ITreasuryVault, Permissioned {
         uint8 vaultDecimals = Assets.decimals();
 
         // create the token contract for this vault
-        Shares = VaultShares(new VaultShares(vaultName, vaultSymbol, vaultDecimals));
+        Shares = new VaultShares(vaultName, vaultSymbol, vaultDecimals);
 
         // register this contract as an approved application of the VaultShares contract
         Shares.approveApplication(address(this));

@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.0;
 
-import "../libraries/AppContract.sol";
 import "./interfaces/IBalanceSheetMining.sol";
 import "../state/ClaimableRewards.sol";
 import "../state/Memberships.sol";
@@ -35,9 +34,10 @@ contract BalanceSheetMiningV1 is IBalanceSheetMining, Permissioned {
         DefVaultShares = defVaultShares_;
         Rewards = new ClaimableRewards(UsdcVaultShares, DefVaultShares);
         Rewards.approveApplication(address(this));
+        Rewards.transferOwnership(msg.sender);
     }
 
-    function pendingRewards(address depositor_) public view override onlyApprovedApps returns (uint256) {
+    function pendingRewards(address depositor_) public view override returns (uint256) {
         uint256 totalHistoricalRewards = UsdcVaultShares.balanceOf(depositor_) * Rewards.accRewardsPerShare();
         uint256 finalDepositorRewards = (totalHistoricalRewards - Rewards.ineligibleRewards(depositor_)) / Rewards.decimalMultiplier();
 
