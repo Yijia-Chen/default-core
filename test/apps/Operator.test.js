@@ -47,7 +47,6 @@ describe("Operator.sol", function () {
         this.mining = await this.BalanceSheetMining.deploy(this.usdcShares.address, this.defShares.address);
         await this.mining.deployed();
 
-        this.mining = await this.BalanceSheetMining.deploy(this.usdcShares.address, this.defShares.address)
         this.rewards = await ethers.getContractAt("ClaimableRewards", await this.mining.Rewards());
 
         this.budget = await this.ContributorBudget.deploy(this.defShares.address, this.memberships.address);

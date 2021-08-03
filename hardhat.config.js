@@ -28,7 +28,7 @@ module.exports = {
       accounts: [process.env.PRIVATE_KEY]
     },
     matic: {
-      url: "JSON RPC GOES HERE",
+      url: "https://polygon-mainnet.g.alchemy.com/v2/bDBqT7mYkjP0qY25LC5q0isOyL9RggUT",
       accounts: [process.env.PRIVATE_KEY]
     }
   },
