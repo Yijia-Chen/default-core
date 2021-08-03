@@ -5,7 +5,12 @@ Design Principles
 
 2. Easily for front-ends to integrate into: intuitive contract interfaces (both for humans and computers).
 
+-------
 
+OS: shared system state, access/permissions control, routing...
+Products: protocols for various org operations (finance (token markets), payroll (contributor payment), hr (referrals))
+
+Plugins: augmentations on the core logic for the shared OS state to improve certain elements of a dao
 
 -------
 
