@@ -31,7 +31,7 @@ contract ContributorBudgetV1 is IContributorBudget, Permissioned {
 
     function bulkTransfer(address[] calldata contributors_, uint256[] calldata rewardAmounts_) external override onlyApprovedApps returns (bool) {
         require(contributors_.length == rewardAmounts_.length, "Operator.sol bulkTransfer(): input array for contributors and reward amounts must be equal");
-        
+    
         uint256 rewardsDistributed = 0;
         for (uint i = 0; i < contributors_.length; i++) {
             
