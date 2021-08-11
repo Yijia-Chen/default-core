@@ -6,7 +6,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract TreasuryVaultV1 is ERC20 { // + Pausable, Ownable, AppRegistry
+contract TreasuryVault is ERC20 { // + Pausable, Ownable, AppRegistry
 
     uint8 public decimals;
     address public Treasury; // the treasury contract of the operating Default DAO

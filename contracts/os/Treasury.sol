@@ -19,7 +19,7 @@ contract TreasuryV1 {
         uint8 vaultDecimals = Assets.decimals();
 
         // create the token contract for this vault
-        address newVault = address(new Vault(vaultToken_, vaultName, vaultSymbol, vaultDecimals));
+        address newVault = address(new TreasuryVault(vaultToken_, vaultName, vaultSymbol, vaultDecimals));
 
         // save it to the registry
         _vaultRegistry[vaultToken_] = newVault; 
@@ -34,7 +34,7 @@ contract TreasuryV1 {
     function permanentlyCloseVault(address vaultToken_) internal onlyOperator {
 
         // get the vault contract associated with the token
-        Vault vault = Vault(_vaultRegistry(vaultToken_));
+        TreasuryVault vault = TreasuryVault(_vaultRegistry(vaultToken_));
 
         // prevent users from interacting with the vault
         vault.pause();
