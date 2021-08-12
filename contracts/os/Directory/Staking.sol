@@ -30,15 +30,15 @@
 
 pragma solidity ^0.8.0;
 
-import "../DefaultOS.sol";
+import "../OS.sol";
 import "hardhat/console.sol";
 
-contract Staking is DefaultOS {
+contract Staking is ConfigureOS {
 
-    event TokensStaked(address member_, uint256 amount_, uint16 lockDuration_);
+    event TokensLocked(address member_, uint256 amount_, uint16 lockDuration_);
     event TokensWithdrawn(address member_, uint256 amount_);
 
-    constructor(OS defaultOS_) DefaultOS(defaultOS_) {}
+    constructor(OS defaultOS_) ConfigureOS(defaultOS_) {}
 
     // number of Stakes for the user
     uint16 public numStakes = 0;
@@ -189,7 +189,7 @@ contract Staking is DefaultOS {
         _OS.transferFrom(member_, address(this), amount_);
 
         // record the event for dapps
-        emit TokensStaked(member_, amount_, lockDuration_);
+        emit TokensLocked(member_, amount_, lockDuration_);
     }
 
     function withdrawAvailableTokens(address member_) external {

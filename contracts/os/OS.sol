@@ -35,3 +35,11 @@ contract OS is ERC20("Default Token", "DEF"), Ownable { // is Treasury, Director
 
     // }
 }
+
+abstract contract ConfigureOS is Ownable {
+    OS internal _OS;
+
+    constructor(OS defaultOS_) {
+        _OS = defaultOS_;
+    }
+}
