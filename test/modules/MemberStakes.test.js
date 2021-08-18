@@ -188,9 +188,9 @@ describe("MemberStakes.sol", function () {
         })
 
         it("sets correct ownership", async function () {
-            const notDevCalls = this.stakes.connect(this.notDev);
-            await expect(notDevCalls.registerNewStake(0, 0, 0).to.be.revertedWith("owner is not caller");
-            await expect(notDevCalls.dequeueStake().to.be.revertedWith("owner is not caller");
+            const notOwnerCalls = this.stakes.connect(this.notOwner);
+            await expect(notOwnerCalls.registerNewStake(0, 0, 0)).to.be.revertedWith("Ownable: caller is not the owner");
+            await expect(notOwnerCalls.dequeueStake()).to.be.revertedWith("Ownable: caller is not the owner");
         })
 
         context("registerNewStake()", async function () {
