@@ -5,6 +5,7 @@ describe("MemberStakes.sol", function () {
     before(async function () {
         this.signers = await ethers.getSigners();
         this.dev = this.signers[0];
+        this.notOwner = this.signers[1];
     
         this.MemberStakesInternals = await ethers.getContractFactory("TESTONLY_MemberStakesInternalFunctions");
         this.MemberStakes = await ethers.getContractFactory("MemberStakes");
@@ -184,6 +185,12 @@ describe("MemberStakes.sol", function () {
 
             await this.internals.deployed();
             await this.stakes.deployed(); 
+        })
+
+        it("sets correct ownership", async function () {
+            const notDevCalls = this.stakes.connect(this.notDev);
+            await expect(notDevCalls.registerNewStake(0, 0, 0).to.be.revertedWith("owner is not caller");
+            await expect(notDevCalls.dequeueStake().to.be.revertedWith("owner is not caller");
         })
 
         context("registerNewStake()", async function () {

@@ -43,9 +43,10 @@
 pragma solidity ^0.8.0;
 
 import "../DefaultOS.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "hardhat/console.sol";
 
-contract MemberStakes { // IS OWNABLE
+contract MemberStakes is Ownable {
     // number of Stakes for the user
     uint8 public numStakes = 0;
 
@@ -147,7 +148,7 @@ contract MemberStakes { // IS OWNABLE
     }
 
     // When registering new stakes, do a sorted insert into the doubly linked list based on expiry epoch | lockDuration
-    function registerNewStake(uint16 expiryEpoch_, uint16 lockDuration_, uint256 amount_) external {
+    function registerNewStake(uint16 expiryEpoch_, uint16 lockDuration_, uint256 amount_) external onlyOwner {
         uint32 newStakeId = _packStakeId(expiryEpoch_, lockDuration_);
         Stake memory newStake = getStakeForId[newStakeId];
         Stake memory lastStake = getStakeForId[LAST];
@@ -176,10 +177,9 @@ contract MemberStakes { // IS OWNABLE
             uint32 existingStakeId = _packStakeId(lastStake.expiryEpoch, lastStake.lockDuration);
             _insertStakeBefore(existingStakeId, expiryEpoch_, lockDuration_, amount_);
         }
-
     }
 
-    function dequeueStake() external returns (uint16 lockDuration_, uint256 amount_) {
+    function dequeueStake() external onlyOwner returns (uint16 lockDuration_, uint256 amount_) {
         // If no stakes exist, return false and empty
         require (numStakes > 0, "cannot dequeue empty stakes list");
 
