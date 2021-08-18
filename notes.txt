@@ -1,3 +1,30 @@
+// user flows
+
+    // DAOs
+    // -----------
+    // 1) Create an OS contract. Give it a name. This is your DAO.
+    // 2) Install the modules you want. Directory. Treasury. Token. 
+    // These are based on the Apps (features) you want to support for the DAO users.
+    
+    // Users
+    // ------------
+    // 1) Create a Member contract -> "Register" for Default.
+    // 2) View all (display staking only if member).
+
+    // View all -> index of all members
+    // -> endorse members (if you have membership contract)
+    // -> mint endorsements by committing DEF tokens to the DAO. (50 -> 1), (100 -> 3), (150 -> 6), (200 -> 10) 
+
+    // "user wants"
+    // "1. To be displayed in the members page (both eligible and ineligible for rewards)" -> To endorse others (Reputation);
+    // "2. To participate in contributor rewards (to give and receive default tokens from the weekly allocation)" -> To reward contributors (Rewards);
+
+
+    // created contracts (vaults, members, etc.) know information about their parent contracts (downloaded at creation -> module version, etc.) for verification and security.
+
+
+-------
+
 Design Principles
 
 1. Prioritize readability, developer experience, and auditability. 
