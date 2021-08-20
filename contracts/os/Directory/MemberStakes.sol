@@ -46,7 +46,7 @@ import "../DefaultOS.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "hardhat/console.sol";
 
-contract MemberStakes is Ownable {
+contract MemberStakes is Ownable { // owned by (and called by) the Membership Module
     // number of Stakes for the user
     uint8 public numStakes = 0;
 
@@ -179,7 +179,7 @@ contract MemberStakes is Ownable {
         }
     }
 
-    function dequeueStake() external onlyOwner returns (uint16 lockDuration_, uint256 amount_) {
+    function dequeueStake() external onlyOwner returns (uint16 lockDuration_, uint16 expiryEpoch_, uint256 amount_) {
         // If no stakes exist, return false and empty
         require (numStakes > 0, "cannot dequeue empty stakes list");
 
@@ -204,6 +204,6 @@ contract MemberStakes is Ownable {
         totalStakedTokens -= firstStake.amountStaked;
         numStakes--;
 
-        return (firstStake.lockDuration, firstStake.amountStaked);
+        return (firstStake.lockDuration, firstStake.expiryEpoch, firstStake.amountStaked);
     }
 }

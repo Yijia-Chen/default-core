@@ -54,7 +54,7 @@ contract DefaultOSModuleInstaller is Ownable {
 }
 
 contract DefaultOSModule is Ownable {
-    DefaultOS private _OS;
+    DefaultOS public _OS;
 
     constructor(DefaultOS os_) {
         _OS = os_;
@@ -82,4 +82,5 @@ contract DefaultOS is Ownable {
     function incrementEpoch() external onlyOwner {
         currentEpoch++;
     }    
+    
 }
