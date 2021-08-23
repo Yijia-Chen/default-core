@@ -7,36 +7,6 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import "hardhat/console.sol";
 
-// The DefaultOS is a single contract that gives various modules access to each others' states.
-// Pair of Supervisor/Factory contract is called a MODULE.
-// -> TREASURY MODULE: Treasury (Supervisor), Vault (Factory)
-// -> DIRECTORY MODULE: Directory (Supervisor), Member (Factory)
-// -> (Future) GOVERNANCE MODULE: Governance (Supervisor), Proposal (Factory)
-
-// We can use a monolithic OS contract architecture to start, but eventually the main OS
-// should be some kind of proxy. This design severely limits the flexibility/extensibility modules per OS
-// due to eth's gas limit. The proxy OS contract could act as a router to multiple individual state contracts, 
-// and making it easy to upgrade/change out existing modules.
-
-// The operator contract is the interface/authentication contract that allows the operator/executor 
-// (EOA, multisig, or on-chain governance) to call other modules, link other modules to each
-// other, and grant modules access to each others' state. This way, we can have an ecosystem
-// of contracts that can expect and modify state at the target for full permissionless
-// interactions in the blockchain ecosystem.
-
-// MODULES: Token, Treasury, Directory
-
-
-    // KeyCodeMapping: {
-    //     TKN = IDefaultERC20
-    
-    //     MBR = IDefaultMemberships
-    //     CBR = IDefaultContributorRewards
-
-    //     TSY = IDefaultTreasury
-    //     BSM = IDefaultBalanceSheetMining
-    // }
-
 contract DefaultOSModuleInstaller is Ownable {
     bytes3 public moduleKeycode;
 
@@ -48,8 +18,8 @@ contract DefaultOSModuleInstaller is Ownable {
         moduleKeycode = moduleKeycode_;
     }
 
-    function install(DefaultOS os_) external virtual returns (address) {
-        require(false, "function install() must be implemented in the Default OS Installer");
+    function install(DefaultOS os_) external virtual returns (address moduleAddress) { // ensure only the OS owner can call install anything
+        require(false, "function install() must be implemented in the Default OS Module Installer");
     }
 }
 

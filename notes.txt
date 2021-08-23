@@ -1,3 +1,11 @@
+Build a contract/module development checklist/testing framework
+
+- check to make sure all necessary events are emitted
+- check permissions for each function
+- 
+
+-------------
+
 // user flows
 
     // DAOs

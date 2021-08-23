@@ -1,20 +1,20 @@
 const { expect } = require("chai");
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
-describe("MemberStakes.sol", function () {
+describe("Stakes.sol", function () {
     before(async function () {
         this.signers = await ethers.getSigners();
         this.dev = this.signers[0];
         this.notOwner = this.signers[1];
     
-        this.MemberStakesInternals = await ethers.getContractFactory("TESTONLY_MemberStakesInternalFunctions");
-        this.MemberStakes = await ethers.getContractFactory("MemberStakes");
+        this.StakesInternals = await ethers.getContractFactory("TESTONLY_StakesInternalFunctions");
+        this.Stakes = await ethers.getContractFactory("Stakes");
         // this.OS = await ethers.getContractFactory("DefaultOS");
     })
     
     describe("internal functions", async function () {
         beforeEach(async function () {
-            this.internals = await this.MemberStakesInternals.deploy();
+            this.internals = await this.StakesInternals.deploy();
             await this.internals.deployed(); 
         })
 
@@ -180,8 +180,8 @@ describe("MemberStakes.sol", function () {
     describe("public functions", async function () {
         beforeEach(async function () {
             // use internals for the packing/unpacking id functions
-            this.internals = await this.MemberStakesInternals.deploy();
-            this.stakes = await this.MemberStakes.deploy();
+            this.internals = await this.StakesInternals.deploy();
+            this.stakes = await this.Stakes.deploy();
 
             await this.internals.deployed();
             await this.stakes.deployed(); 

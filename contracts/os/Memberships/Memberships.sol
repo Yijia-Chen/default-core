@@ -3,26 +3,29 @@
 pragma solidity ^0.8.0;
 
 import "../DefaultOS.sol";
-import "../Directory/MemberContract.sol";
+import "../Memberships/Stakes.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "hardhat/console.sol";
 
-contract DefaultMembershipsInstaller is DefaultOSModuleInstaller("MBR") {
-    string public moduleName = "DefaultOS Memberships Module";
+contract def_MembershipsInstaller is DefaultOSModuleInstaller("MBR") {
+    string public moduleName = "Default Memberships";
 
     function install(DefaultOS os_) external override returns (address) {
-        DefaultMemberships memberships = new DefaultMemberships(os_);
-
-        // give ownership to the OS for transfer/upgrade stuff in the future
+        def_Memberships memberships = new def_Memberships(os_);
         memberships.transferOwnership(address(os_)); 
-
         return address(memberships);
     }
 }
 
-contract DefaultMemberships is DefaultOSModule {
+contract def_Memberships is DefaultOSModule {
+    IERC20 private _defToken;
+
+    constructor(DefaultOS os_) DefaultOSModule(os_) {
+        _defToken = IERC20(_OS.getModule("TKN"));
+    }
+    
     event MemberRegistered(address member, uint16 currentEpoch);
     event TokensStaked(address member, uint256 amount, uint16 lockDuration, uint16 currentEpoch);
     event TokensUnstaked(address member, uint256 amount, uint16 lockDuration, uint16 currentEpoch);
@@ -36,11 +39,13 @@ contract DefaultMemberships is DefaultOSModule {
     }
 
     // alias stuff -> set alias
-    mapping(bytes32 => address) public getMemberForAlias;
-    mapping(address => bytes32) public getAliasForMember;
+
+    // DON'T FORGET TO IMPLEMENT
+    // mapping(bytes32 => address) public getMemberForAlias;
+    // mapping(address => bytes32) public getAliasForMember;
 
     // membership contract
-    mapping(address => MemberStakes) public getMemberStakes;
+    mapping(address => Stakes) public getMemberStakes;
 
     // qualifying members/participation in the DAO
     mapping(address => uint256) public totalEndorsementsAvailableToGive; // replace with staking amount
@@ -53,21 +58,14 @@ contract DefaultMemberships is DefaultOSModule {
     // RECEIVER => mapping (GIVER => AMOUNT)
     mapping(address => mapping(address => uint256)) public endorsementsReceived;
 
-
-    IERC20 private _defToken;
-
-    constructor(DefaultOS os_) DefaultOSModule(os_) {
-        _defToken = IERC20(_OS.getModule("TKN"));
-    }
-
     function register() external {
         // ensure that the user does not have an existing member contract
         require(address(getMemberStakes[msg.sender]) == address(0), "Member already exists"); // && getAliasForMember[msg.sender] == "0x0000000000000000000000000000000000000000000000000000000000000000"); // empty 32 bytes = 64 hex 0s.
-        getMemberStakes[msg.sender] = new MemberStakes();
+        getMemberStakes[msg.sender] = new Stakes();
         emit MemberRegistered(msg.sender, _OS.currentEpoch());
     }
 
-    function _getMultiplierForStakingDuration(uint16 lockDuration_) private pure returns (uint256) {
+    function _getMultiplierForStakingDuration(uint16 lockDuration_) private pure returns (uint256 multiplier) {
         if (lockDuration_ < 50 ) { return 0; }
         else if (lockDuration_ >= 50  && lockDuration_ < 100) { return 1; }
         else if (lockDuration_ >= 100 && lockDuration_ < 150) { return 3; }
@@ -81,7 +79,7 @@ contract DefaultMemberships is DefaultOSModule {
         
         uint16 expiryEpoch = _OS.currentEpoch() + lockDuration_;
 
-        MemberStakes memberStakes = MemberStakes(getMemberStakes[msg.sender]);
+        Stakes memberStakes = Stakes(getMemberStakes[msg.sender]);
 
         totalEndorsementsAvailableToGive[msg.sender] += amount_ * _getMultiplierForStakingDuration(lockDuration_);
         memberStakes.registerNewStake(expiryEpoch, lockDuration_, amount_);
@@ -95,7 +93,7 @@ contract DefaultMemberships is DefaultOSModule {
     // This is for just one stake, in case stakes get unweildy and gas costs prevent batch unstaking
     function unstakeTokens() external requireMembership {
         // get the memberStakes for the caller
-        MemberStakes memberStakes = MemberStakes(getMemberStakes[msg.sender]);
+        Stakes memberStakes = Stakes(getMemberStakes[msg.sender]);
         (uint16 lockDuration, uint16 expiryEpoch, uint256 amountStaked) = memberStakes.dequeueStake();
 
         // User should withdraw the necessary endorsements prior to unstaking

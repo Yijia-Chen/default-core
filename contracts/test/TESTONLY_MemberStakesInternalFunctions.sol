@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.0;
 
-import "../os/Directory/MemberStakes.sol";
+import "../os/Memberships/Stakes.sol";
 import "hardhat/console.sol";
 
-contract TESTONLY_MemberStakesInternalFunctions is MemberStakes {
+contract TESTONLY_StakesInternalFunctions is Stakes {
 
     function packStakeId(uint16 expiryEpoch, uint16 lockDuration) external pure returns (uint32 stakeId) {
         return _packStakeId(expiryEpoch, lockDuration);

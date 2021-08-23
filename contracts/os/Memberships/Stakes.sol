@@ -46,7 +46,7 @@ import "../DefaultOS.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "hardhat/console.sol";
 
-contract MemberStakes is Ownable { // owned by (and called by) the Membership Module
+contract Stakes is Ownable { // owned by (and called by) the Membership Module
     // number of Stakes for the user
     uint8 public numStakes = 0;
 
@@ -198,7 +198,6 @@ contract MemberStakes is Ownable { // owned by (and called by) the Membership Mo
             getStakeForId[firstStake.nextStakeId] = nextStake;
             FIRST = firstStake.nextStakeId;
         }
-
 
         // update the appropriate state variables
         totalStakedTokens -= firstStake.amountStaked;
