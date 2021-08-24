@@ -45,7 +45,7 @@ pragma solidity ^0.8.0;
 import "../DefaultOS.sol";
 import "hardhat/console.sol";
 
-contract Staking { // owned by (and called by) the Membership Module
+contract Staking {
 
     // pack the struct variables--order declaration matters!
     // single stake object for a list of stakes
@@ -66,81 +66,50 @@ contract Staking { // owned by (and called by) the Membership Module
         mapping(uint32 => Stake) getStakeForId; // key is a composite id consisting of expiryEpoch + lockDuration
     }
 
+
     // get the list of stakes for a given member;
     mapping(address => StakesList) public getStakesForMember;
 
+
+
+    // **********************************************************************
+    //                          GENERATE STAKE ID
+    // **********************************************************************
+
     // used to get the stake object from the mapping
     function _packStakeId(uint16 expiryEpoch_, uint16 lockDuration_) internal pure returns(uint32 stakeId) {
+
         // shift expiry epoch 16 bits to the left and append the 16bit lock duration at the end to create a composite ID
         return (uint32(expiryEpoch_) << 16) | uint32(lockDuration_);
     }
 
+
+
+    // **********************************************************************
+    //              GET STAKE EXPIRY AND DURATION FROM STAKE ID
+    // **********************************************************************
+
     // deconstruct the composite ID of the stake to get the expiry epoch and lock duration
     function _unpackStakeId(uint32 stakeId_) internal pure returns(uint16 lockDuration, uint16 expiryEpoch) {
+
+        // save the left 16 bits of the Id as the expiry Epoch
         expiryEpoch = uint16(stakeId_ >> 16);
+
+        // save the right 16 bits of the Id as the duration
         lockDuration = uint16(stakeId_);
+        
         return (expiryEpoch, lockDuration);
     }
 
-    // Push the stake to the end of the linked list
-    function _pushStake(uint16 expiryEpoch_, uint16 lockDuration_, uint256 amount_) internal {
-        StakesList storage stakes = getStakesForMember[msg.sender];
 
-        // create and map new Stake
-        uint32 newStakeId = _packStakeId(expiryEpoch_, lockDuration_);
-        stakes.getStakeForId[newStakeId] = Stake(expiryEpoch_, lockDuration_, stakes.LAST, 0, amount_);
 
-        // if stake is the only item in the list, make it the new FIRST as well.
-        if (stakes.numStakes == 0) { 
-            stakes.FIRST = newStakeId;
+    // **********************************************************************
+    //                        REGISTER A NEW STAKE
+    // **********************************************************************
 
-        // otherwise, find the last stake and set its next stake to the new stake.
-        } else {
-            Stake storage curLAST = stakes.getStakeForId[stakes.LAST];
-            curLAST.nextStakeId = newStakeId;
-        }
-
-        // set the current stake to be the new LAST item in the linked list & update the appropriate state variables
-        stakes.LAST = newStakeId;
-        stakes.totalTokensStaked += amount_;    
-        stakes.numStakes++;
-    }
-
-    function _insertStakeBefore(uint32 insertedBeforeStakeId_, uint16 expiryEpoch_, uint16 lockDuration_, uint256 amount_) internal {
-        StakesList storage stakes = getStakesForMember[msg.sender];
-
-        // ensure there are existing stakes before inserting new stake before anything
-        require (stakes.numStakes != 0, "Staking.sol: cannot insertStakeBefore() in empty list of Stakes");
-        
-        // get the object of the stake expiring after the new stake
-        Stake memory afterNewStake = stakes.getStakeForId[insertedBeforeStakeId_];
-
-        // create, configure, and map new Stake
-        uint32 newStakeId = _packStakeId(expiryEpoch_, lockDuration_);
-        stakes.getStakeForId[newStakeId] = Stake(expiryEpoch_, lockDuration_, afterNewStake.prevStakeId, insertedBeforeStakeId_, amount_);
-
-        // If the old stake was the FIRST, make the inserted stake the new FIRST.
-        if (insertedBeforeStakeId_ == stakes.FIRST) {
-            stakes.FIRST = newStakeId;
-
-        // Otherwise, change the "next" pointer for the stake expiring before the new stake
-        } else {
-            Stake memory beforeNewStake = stakes.getStakeForId[afterNewStake.prevStakeId];
-            beforeNewStake.nextStakeId = newStakeId;
-            stakes.getStakeForId[afterNewStake.prevStakeId] = beforeNewStake;
-        }
-
-        // Set the next stake's prev pointer to the newly inserted Stake.
-        afterNewStake.prevStakeId = newStakeId;
-        stakes.getStakeForId[insertedBeforeStakeId_] = afterNewStake;
-
-        // update the appropriate state variables
-        stakes.totalTokensStaked += amount_;    
-        stakes.numStakes++;
-    }
-
-    // When registering new stakes, do a sorted insert into the doubly linked list based on expiryEpochn
+    // When registering new stakes, do a sorted insert into the doubly linked list based on expiryEpoch
     function _registerNewStake(uint16 expiryEpoch_, uint16 lockDuration_, uint256 amount_) internal {
+
         StakesList storage stakes = getStakesForMember[msg.sender];
 
         uint32 newStakeId = _packStakeId(expiryEpoch_, lockDuration_);
@@ -173,10 +142,76 @@ contract Staking { // owned by (and called by) the Membership Module
         }
     }
 
-    function _dequeueStake() internal returns (uint16 lockDuration_, uint16 expiryEpoch_, uint256 amountStaked_) {
+    // push stake to end of list
+    function _pushStake(uint16 expiryEpoch_, uint16 lockDuration_, uint256 amount_) internal {
+
         StakesList storage stakes = getStakesForMember[msg.sender];
 
+        // create and map new Stake
+        uint32 newStakeId = _packStakeId(expiryEpoch_, lockDuration_);
+        stakes.getStakeForId[newStakeId] = Stake(expiryEpoch_, lockDuration_, stakes.LAST, 0, amount_);
+
+        // if stake is the only item in the list, make it the new FIRST as well.
+        if (stakes.numStakes == 0) { 
+            stakes.FIRST = newStakeId;
+
+        // otherwise, find the last stake and set its next stake to the new stake.
+        } else {
+            Stake storage curLAST = stakes.getStakeForId[stakes.LAST];
+            curLAST.nextStakeId = newStakeId;
+        }
+
+        // set the current stake to be the new LAST item in the linked list & update the appropriate state variables
+        stakes.LAST = newStakeId;
+        stakes.totalTokensStaked += amount_;    
+        stakes.numStakes++;
+    }
+
+
+    // insert the stake before given stake
+    function _insertStakeBefore(uint32 insertedBeforeStakeId_, uint16 expiryEpoch_, uint16 lockDuration_, uint256 amount_) internal {
+
+        // ensure there are existing stakes before inserting new stake before anything
+        StakesList storage stakes = getStakesForMember[msg.sender];
+        require (stakes.numStakes != 0, "Staking.sol: cannot insertStakeBefore() in empty list of Stakes");
+        
+        // get the object of the stake expiring after the new stake
+        Stake memory afterNewStake = stakes.getStakeForId[insertedBeforeStakeId_];
+
+        // create, configure, and map new Stake
+        uint32 newStakeId = _packStakeId(expiryEpoch_, lockDuration_);
+        stakes.getStakeForId[newStakeId] = Stake(expiryEpoch_, lockDuration_, afterNewStake.prevStakeId, insertedBeforeStakeId_, amount_);
+
+        // If the old stake was the FIRST, make the inserted stake the new FIRST.
+        if (insertedBeforeStakeId_ == stakes.FIRST) {
+            stakes.FIRST = newStakeId;
+
+        // Otherwise, change the "next" pointer for the stake expiring before the new stake
+        } else {
+            Stake memory beforeNewStake = stakes.getStakeForId[afterNewStake.prevStakeId];
+            beforeNewStake.nextStakeId = newStakeId;
+            stakes.getStakeForId[afterNewStake.prevStakeId] = beforeNewStake;
+        }
+
+        // Set the next stake's prev pointer to the newly inserted Stake.
+        afterNewStake.prevStakeId = newStakeId;
+        stakes.getStakeForId[insertedBeforeStakeId_] = afterNewStake;
+
+        // update the appropriate state variables
+        stakes.totalTokensStaked += amount_;    
+        stakes.numStakes++;
+    }
+
+
+
+    // **********************************************************************
+    //                        DEQUEUE A NEW STAKE
+    // **********************************************************************
+
+    function _dequeueStake() internal returns (uint16 lockDuration_, uint16 expiryEpoch_, uint256 amountStaked_) {
+
         // Ensure stakes exist before dequeueing
+        StakesList storage stakes = getStakesForMember[msg.sender];
         require (stakes.numStakes > 0, "cannot dequeue empty stakes list");
 
         Stake memory firstStake = stakes.getStakeForId[stakes.FIRST];

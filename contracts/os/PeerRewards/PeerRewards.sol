@@ -40,7 +40,7 @@ contract def_PeerRewards is DefaultOSModule{
     // persistent allocation data for a particular member
     struct AllocData {
         address to; // the address of the member currently being allocated to
-        address prev; // the address of the member
+        address prev; // the address of the prev member in the list
         address next; // the address of the next member in the list
         uint8 pts; // points allocated to the current member
     }
