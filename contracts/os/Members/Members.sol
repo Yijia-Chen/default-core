@@ -59,7 +59,7 @@ contract def_Members is Staking, DefaultOSModule {
 
 
     // **********************************************************************
-    //                     MINT ENDORSEMENTS TO GIVE
+    //                     SET THE ALIAS FOR THE MEMBER
     // **********************************************************************
 
     function setAlias(bytes32 alias_) external {
@@ -75,20 +75,20 @@ contract def_Members is Staking, DefaultOSModule {
     //                     MINT ENDORSEMENTS TO GIVE
     // **********************************************************************
 
-    function mintEndorsements(uint16 lockDuration_, uint256 amount_) external {
-        require (amount_ > 0, "def_Members | (): def_Members | mintEndorsements() : member must stake more than 0 tokens");
+    function mintEndorsements(uint16 lockDuration_, uint256 tokensStaked_) external {
+        require (tokensStaked_ > 0, "def_Members | (): def_Members | mintEndorsements() : member must stake more than 0 tokens");
         require (lockDuration_ >= 50, "def_Members | (): def_Members | mintEndorsements(): member must stake for at least 50 epochs");
         
         uint16 expiryEpoch = _OS.currentEpoch() + lockDuration_;
 
         // get the adjusted amount of endorsements based on staking duration
-        totalEndorsementsAvailableToGive[msg.sender] += amount_ * _getMultiplierForStakingDuration(lockDuration_);
+        totalEndorsementsAvailableToGive[msg.sender] += tokensStaked_ * _getMultiplierForStakingDuration(lockDuration_);
 
         // register the stake and transfer tokens
-        _registerNewStake(expiryEpoch, lockDuration_, amount_);
-        _Token.transferFrom(msg.sender, address(this), amount_);
+        _registerNewStake(expiryEpoch, lockDuration_, tokensStaked_);
+        _Token.transferFrom(msg.sender, address(this), tokensStaked_);
 
-        emit TokensStaked(msg.sender, amount_, lockDuration_, _OS.currentEpoch());
+        emit TokensStaked(msg.sender, tokensStaked_, lockDuration_, _OS.currentEpoch());
     }
 
 
@@ -121,20 +121,20 @@ contract def_Members is Staking, DefaultOSModule {
     //                        ENDORSE ANOTHER MEMBER
     // **********************************************************************
 
-    function endorseMember(address targetMember_, uint256 amount_) external {
+    function endorseMember(address targetMember_, uint256 tokensStaked_) external {
 
         // ensure that the member has enough endorsements available
-        require (totalEndorsementsGiven[msg.sender] + amount_ <= totalEndorsementsAvailableToGive[msg.sender], "def_Members | endorseMember(): Member does not have available endorsements to give");
+        require (totalEndorsementsGiven[msg.sender] + tokensStaked_ <= totalEndorsementsAvailableToGive[msg.sender], "def_Members | endorseMember(): Member does not have available endorsements to give");
 
         // increment the applicable states for the giver
-        totalEndorsementsGiven[msg.sender] += amount_;
-        endorsementsGiven[msg.sender][targetMember_] += amount_;
+        totalEndorsementsGiven[msg.sender] += tokensStaked_;
+        endorsementsGiven[msg.sender][targetMember_] += tokensStaked_;
 
         // increment the applicable states for the receiver
-        totalEndorsementsReceived[targetMember_] += amount_;
-        endorsementsReceived[targetMember_][msg.sender] += amount_;
+        totalEndorsementsReceived[targetMember_] += tokensStaked_;
+        endorsementsReceived[targetMember_][msg.sender] += tokensStaked_;
 
-        emit EndorsementGiven(msg.sender, targetMember_, amount_, _OS.currentEpoch());
+        emit EndorsementGiven(msg.sender, targetMember_, tokensStaked_, _OS.currentEpoch());
     }
 
 
@@ -143,19 +143,19 @@ contract def_Members is Staking, DefaultOSModule {
     //               WITHDRAW ENDORSEMENTS FROM ANOTHER MEMBER
     // **********************************************************************
 
-    function withdrawEndorsementFrom(address targetMember_, uint256 amount_) external {
+    function withdrawEndorsementFrom(address targetMember_, uint256 tokensStaked_) external {
 
         // ensure that the member has enough endorsements to withdraw
-        require(endorsementsGiven[msg.sender][targetMember_] >= amount_, "def_Members | withdrawEndorsementFrom(): Not enough endorsements to withdraw");
+        require(endorsementsGiven[msg.sender][targetMember_] >= tokensStaked_, "def_Members | withdrawEndorsementFrom(): Not enough endorsements to withdraw");
 
         // decrement the applicable states for the giver
-        totalEndorsementsGiven[msg.sender] -= amount_;
-        totalEndorsementsReceived[targetMember_] -= amount_;
+        totalEndorsementsGiven[msg.sender] -= tokensStaked_;
+        totalEndorsementsReceived[targetMember_] -= tokensStaked_;
 
         // decrement the applicable states for the giver
-        endorsementsGiven[msg.sender][targetMember_] -= amount_;
-        endorsementsReceived[targetMember_][msg.sender ] -= amount_;
+        endorsementsGiven[msg.sender][targetMember_] -= tokensStaked_;
+        endorsementsReceived[targetMember_][msg.sender ] -= tokensStaked_;
 
-        emit EndorsementWithdrawn(msg.sender, targetMember_, amount_, _OS.currentEpoch());
+        emit EndorsementWithdrawn(msg.sender, targetMember_, tokensStaked_, _OS.currentEpoch());
     }
 }

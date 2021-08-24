@@ -37,20 +37,6 @@ contract def_PeerRewards is DefaultOSModule{
     event RewardsClaimed(address member, uint256 rewardsClaimed, uint16 epochClaimedFor);
 
 
-    // amount of endorsements a member needs to have in order to participate in contributor rewards
-    uint256 public PARTICIPATION_THRESHOLD = 1500000;
-
-    // number of endorsements a user needs to have in order to receive rewards
-    uint256 public REWARDS_THRESHOLD = 500000;
-
-    // amount of tokens minted per epoch for contributor rewards
-    uint256 public CONTRIBUTOR_EPOCH_REWARDS = 500000;
-
-    // min & max percentage of a members rewards that can be given to another member
-    uint8 public MIN_ALLOC_PCTG = 6; // max 16 members
-    uint8 public MAX_ALLOC_PCTG = 33; // min 3 members
-
-
     // persistent allocation data for a particular member
     struct AllocData {
         address to; // the address of the member currently being allocated to
@@ -90,6 +76,45 @@ contract def_PeerRewards is DefaultOSModule{
 
     // boolean flag for if rewards have been claimed by a member for a given epoch
     mapping(uint16 => mapping(address => bool)) public claimedRewards;
+
+
+    // **********************************************************************
+    //                   GOVERNANCE CONTROLLED VARIABLES
+    // **********************************************************************
+
+    // amount of endorsements a member needs to have in order to participate in contributor rewards
+    uint256 public PARTICIPATION_THRESHOLD = 1500000;
+
+    // number of endorsements a user needs to have in order to receive rewards
+    uint256 public REWARDS_THRESHOLD = 500000;
+
+    // amount of tokens minted per epoch for contributor rewards
+    uint256 public CONTRIBUTOR_EPOCH_REWARDS = 500000;
+
+    // min & max percentage of a members rewards that can be given to another member
+    uint8 public MIN_ALLOC_PCTG = 6; // max 16 members
+    uint8 public MAX_ALLOC_PCTG = 33; // min 3 members
+
+    
+    function setParticipationThreshold(uint256 newThreshold_) external onlyOwner {
+        PARTICIPATION_THRESHOLD = newThreshold_;
+    }
+
+    function setRewardsThreshold(uint256 newThreshold_) external onlyOwner {
+        REWARDS_THRESHOLD = newThreshold_;
+    }
+
+    function setContributorEpochRewards(uint256 newEpochRewards_) external onlyOwner {
+        CONTRIBUTOR_EPOCH_REWARDS = newEpochRewards_;
+    }
+
+    function setMinAllocPctg(uint8 newMinAllocPctg_) external onlyOwner {
+        MIN_ALLOC_PCTG = newMinAllocPctg_;
+    }   
+    
+    function setMaxAllocPctg(uint8 newMaxAllocPctg_) external onlyOwner {
+        MAX_ALLOC_PCTG = newMaxAllocPctg_;
+    }
 
 
 
@@ -307,31 +332,5 @@ contract def_PeerRewards is DefaultOSModule{
         _Token.mint(msg.sender, rewardsClaimed);
 
         emit RewardsClaimed(msg.sender, rewardsClaimed, claimEpoch_);
-    }
-
-
-
-    // **********************************************************************
-    //                   CONTRACT VARIABLE CONFIGURATION
-    // **********************************************************************
-    
-    function setParticipationThreshold(uint256 newThreshold_) external onlyOwner {
-        PARTICIPATION_THRESHOLD = newThreshold_;
-    }
-
-    function setRewardsThreshold(uint256 newThreshold_) external onlyOwner {
-        REWARDS_THRESHOLD = newThreshold_;
-    }
-
-    function setContributorEpochRewards(uint256 newEpochRewards_) external onlyOwner {
-        CONTRIBUTOR_EPOCH_REWARDS = newEpochRewards_;
-    }
-
-    function setMinAllocPctg(uint8 newMinAllocPctg_) external onlyOwner {
-        MIN_ALLOC_PCTG = newMinAllocPctg_;
-    }   
-    
-    function setMaxAllocPctg(uint8 newMaxAllocPctg_) external onlyOwner {
-        MAX_ALLOC_PCTG = newMaxAllocPctg_;
     }
 }
