@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import "hardhat/console.sol";
 
-contract DefaultOSModuleInstaller is Ownable {
+abstract contract DefaultOSModuleInstaller is Ownable {
     bytes3 public moduleKeycode;
 
     constructor(bytes3 moduleKeycode_) {
@@ -19,7 +19,7 @@ contract DefaultOSModuleInstaller is Ownable {
     }
 
     function install(DefaultOS os_) external virtual returns (address moduleAddress) { // ensure only the OS owner can call install anything
-        require(false, "function install() must be implemented in the Default OS Module Installer");
+        // require(false, "function install() must be implemented in the Default OS Module Installer");
     }
 }
 

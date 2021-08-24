@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: MIT
 
-// naming? peer rewards, contributor rewards, dao/pay/etc.
-
 pragma solidity ^0.8.0;
 
 import "../DefaultOS.sol";
-import "../Memberships/Memberships.sol";
+import "../Members/Members.sol";
 import "../Token/Token.sol";
 
 import "hardhat/console.sol";
@@ -24,11 +22,11 @@ contract def_PeerRewards is DefaultOSModule{
 
     // Module Configuration
     def_Token private _Token;
-    def_Memberships private _Members;
+    def_Members private _Members;
 
     constructor(DefaultOS os_) DefaultOSModule(os_) {
         _Token = def_Token(_OS.getModule("TKN"));
-        _Members = def_Memberships(_OS.getModule("MBR"));
+        _Members = def_Members(_OS.getModule("MBR"));
     }
 
 
@@ -63,7 +61,7 @@ contract def_PeerRewards is DefaultOSModule{
 
     // a linked list of individual Allocations for a given member
     struct AllocationsList {
-        uint8 length; // number of allocations for the member
+        uint8 numAllocs; // number of allocations for the member
         uint8 highestPts; // the highest allocation pts in their list
         uint8 lowestPts; // the lowest allocation pts in their list
         uint16 totalPts; // total points allocated to other members in the org
@@ -96,17 +94,15 @@ contract def_PeerRewards is DefaultOSModule{
 
 
     // **********************************************************************
-    //                       REGISTER FOR PEER REWARDS
+    //           REGISTER FOR PEER REWARDS IN THE UPCOMING EPOCH
     // **********************************************************************
 
-    // register to participate in contributor rewards for the upcoming epoch
     function register() external {
         // get the current epoch for the OS
         uint16 currentEpoch = _OS.currentEpoch();
 
-        // get the endorsements received for the member
+        // get the endorsements received for the member and make sure they have enough endorsements to register for the upcoming epoch
         uint256 endorsementsReceived = _Members.totalEndorsementsReceived(msg.sender);
-        // make sure they have enough endorsements to register for the upcoming epoch
         require (endorsementsReceived >= PARTICIPATION_THRESHOLD, "Registration | register(): not enough endorsements to participate!");
 
         // if member participated last epoch, increment the streak; otherwise reset the streak to 1.
@@ -173,7 +169,7 @@ contract def_PeerRewards is DefaultOSModule{
         AllocationsList storage allocList = getAllocationsListFor[msg.sender];
 
         // if the list isn't empty, adjust the "next" pointer of the previous allocData to this newly created one.
-        if (allocList.length != 0) {
+        if (allocList.numAllocs != 0) {
             AllocData storage lastAlloc = allocList.allocData[allocList.TAIL];
             lastAlloc.next = toMember_;
         }
@@ -185,7 +181,7 @@ contract def_PeerRewards is DefaultOSModule{
         allocList.TAIL = toMember_;
 
         // increment the list of allocations
-        allocList.length++;
+        allocList.numAllocs++;
          
         // set the highest/lowest pts in the list to the new allocation if applicable
         if (newAllocPts_ > allocList.highestPts) {
@@ -219,8 +215,10 @@ contract def_PeerRewards is DefaultOSModule{
         AllocData storage nextAlloc = allocList.allocData[curAlloc.next];
         nextAlloc.next = curAlloc.prev;
 
-        // delete the allocation data (set to default struct)
+        // delete the allocation data (set to default struct) and adjust the state variables
         allocList.allocData[toMember_] = AllocData(address(0), address(0), address(0), 0);
+        allocList.totalPts -= curAlloc.pts;
+        allocList.numAllocs--;
                         
         // if the deleted allocation was the previous highest or lowest allocation, loop through the list to find the new highest/lowest alloc
         if (allocList.highestPts == curAlloc.pts || allocList.lowestPts == curAlloc.pts) {
