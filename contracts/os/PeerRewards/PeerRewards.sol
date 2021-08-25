@@ -78,6 +78,7 @@ contract def_PeerRewards is DefaultOSModule{
     mapping(uint16 => mapping(address => bool)) public claimedRewards;
 
 
+
     // **********************************************************************
     //                   GOVERNANCE CONTROLLED VARIABLES
     // **********************************************************************
@@ -128,7 +129,7 @@ contract def_PeerRewards is DefaultOSModule{
 
         // get the endorsements received for the member and make sure they have enough endorsements to register for the upcoming epoch
         uint256 endorsementsReceived = _Members.totalEndorsementsReceived(msg.sender);
-        require (endorsementsReceived >= PARTICIPATION_THRESHOLD, "Registration | register(): not enough endorsements to participate!");
+        require (endorsementsReceived >= PARTICIPATION_THRESHOLD, "def_PeerRewards | register(): not enough endorsements to participate!");
 
         // if member participated last epoch, increment the streak; otherwise reset the streak to 1.
         uint16 streak;
