@@ -34,7 +34,7 @@ contract DefaultOSModule is Ownable {
 contract DefaultOS is Ownable {
 
     string public organizationName;
-    uint16 public currentEpoch = 0;
+    uint16 public currentEpoch = 1;
     mapping(bytes3 => address) public MODULES;
 
     constructor(string memory organizationName_) {

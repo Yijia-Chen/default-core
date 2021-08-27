@@ -45,20 +45,20 @@ describe("Members Module", function () {
 
         it("1x multiplier for 50 epochs", async function () {
             const userCalls = this.members.connect(this.userA);
-            await expect(userCalls.mintEndorsements(50, 1000))
+            await expect(userCalls.mintEndorsements(50, 10000))
                 .to.emit(this.members, "TokensStaked")
-                .withArgs(this.userA.address, 1000, 50, 0);
+                .withArgs(this.userA.address, 10000, 50, 0);
 
             const userStakes = await this.members.getStakesForMember(this.userA.address);
             expect(userStakes.numStakes).to.equal(1);
-            expect(userStakes.totalTokensStaked).to.equal(1000);
+            expect(userStakes.totalTokensStaked).to.equal(10000);
             
             // test endorsements
-            expect(await this.members.totalEndorsementsAvailableToGive(this.userA.address)).to.equal(1000);
+            expect(await this.members.totalEndorsementsAvailableToGive(this.userA.address)).to.equal(10000);
 
             // test token transfer successful
-            expect(await this.token.balanceOf(this.userA.address)).to.equal(4000);
-            expect(await this.token.balanceOf(this.members.address)).to.equal(1000);
+            expect(await this.token.balanceOf(this.userA.address)).to.equal(90000);
+            expect(await this.token.balanceOf(this.members.address)).to.equal(10000);
         }) 
 
         it("3x multiplier for 100 epochs", async function () {
@@ -98,20 +98,20 @@ describe("Members Module", function () {
         })
 
         it("rejects endorsements if they are past the threshold", async function () {
-            expect(await userCalls.endorseMember(this.userB.address, 300000)).not.to.be.reverted();
-            expect(await userCalls.endorseMember(this.userB.address, 1)).to.be.revertedWith("def_Members | endorseMember(): total endorsements cannot exceed the max limit");
+            const userCalls = this.members.connect(this.userA);
+            await userCalls.endorseMember(this.userB.address, 300000);
+            await expect(userCalls.endorseMember(this.userB.address, 1)).to.be.revertedWith("def_Members | endorseMember(): total endorsements cannot exceed the max limit");
         })
 
         it("rejects if user tries to gives more endorsements than they have", async function () {
+            const userCalls = this.members.connect(this.userA);
             await userCalls.endorseMember(this.userB.address, 300000);
             await userCalls.endorseMember(this.userC.address, 300000);
             await userCalls.endorseMember(this.userD.address, 300000);
-            expect(await userCalls.endorseMember(this.dev.address, 300000)).to.be.revertedWith("def_Members | endorseMember(): Member does not have available endorsements to give");
-
+            await expect(userCalls.endorseMember(this.dev.address, 300000)).to.be.revertedWith("def_Members | endorseMember(): Member does not have available endorsements to give");
         })
 
         it("successfully endorses multiple registered members and changes the right state", async function () {
-
             const userCalls = this.members.connect(this.userA);
 
             // Test events
@@ -212,7 +212,7 @@ describe("Members Module", function () {
         })
 
         it("sanity check", async function() {
-            expect(await this.token.balanceOf(this.userA.address)).to.equal(1000);
+            expect(await this.token.balanceOf(this.userA.address)).to.equal(96000);
             expect(await this.token.balanceOf(this.members.address)).to.equal(4000);
             expect(await this.members.totalEndorsementsAvailableToGive(this.userA.address)).to.equal(20000);
             expect(await this.default.currentEpoch()).to.equal(49);
@@ -242,7 +242,7 @@ describe("Members Module", function () {
             expect(userStakes.numStakes).to.equal(3);
             expect(userStakes.totalTokensStaked).to.equal(3000);
             expect(await this.members.totalEndorsementsAvailableToGive(this.userA.address)).to.equal(19000);
-            expect(await this.token.balanceOf(this.userA.address)).to.equal(2000);
+            expect(await this.token.balanceOf(this.userA.address)).to.equal(97000);
             expect(await this.token.balanceOf(this.members.address)).to.equal(3000);
 
             // epoch 101 -> second stake expires
@@ -260,7 +260,7 @@ describe("Members Module", function () {
             expect(userStakes.numStakes).to.equal(2);
             expect(userStakes.totalTokensStaked).to.equal(2000);
             expect(await this.members.totalEndorsementsAvailableToGive(this.userA.address)).to.equal(16000);
-            expect(await this.token.balanceOf(this.userA.address)).to.equal(3000);
+            expect(await this.token.balanceOf(this.userA.address)).to.equal(98000);
             expect(await this.token.balanceOf(this.members.address)).to.equal(2000);
 
             // epoch 152 -> third stake expires
@@ -278,7 +278,7 @@ describe("Members Module", function () {
             expect(userStakes.numStakes).to.equal(1);
             expect(userStakes.totalTokensStaked).to.equal(1000);
             expect(await this.members.totalEndorsementsAvailableToGive(this.userA.address)).to.equal(10000);
-            expect(await this.token.balanceOf(this.userA.address)).to.equal(4000);
+            expect(await this.token.balanceOf(this.userA.address)).to.equal(99000);
             expect(await this.token.balanceOf(this.members.address)).to.equal(1000);
 
             // epoch 203 -> last stake expires
@@ -296,7 +296,7 @@ describe("Members Module", function () {
             expect(userStakes.numStakes).to.equal(0);
             expect(userStakes.totalTokensStaked).to.equal(0);
             expect(await this.members.totalEndorsementsAvailableToGive(this.userA.address)).to.equal(0);
-            expect(await this.token.balanceOf(this.userA.address)).to.equal(5000);
+            expect(await this.token.balanceOf(this.userA.address)).to.equal(100000);
             expect(await this.token.balanceOf(this.members.address)).to.equal(0);
         })
         

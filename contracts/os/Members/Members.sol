@@ -159,19 +159,19 @@ contract def_Members is Staking, DefaultOSModule {
     //               WITHDRAW ENDORSEMENTS FROM ANOTHER MEMBER
     // **********************************************************************
 
-    function withdrawEndorsementFrom(address targetMember_, uint256 tokensStaked_) external {
+    function withdrawEndorsementFrom(address targetMember_, uint256 endorsementsWithdrawn_) external {
 
         // ensure that the member has enough endorsements to withdraw
-        require(endorsementsGiven[msg.sender][targetMember_] >= tokensStaked_, "def_Members | withdrawEndorsementFrom(): Not enough endorsements to withdraw");
+        require(endorsementsGiven[msg.sender][targetMember_] >= endorsementsWithdrawn_, "def_Members | withdrawEndorsementFrom(): Not enough endorsements to withdraw");
 
         // decrement the applicable states for the giver
-        totalEndorsementsGiven[msg.sender] -= tokensStaked_;
-        totalEndorsementsReceived[targetMember_] -= tokensStaked_;
+        totalEndorsementsGiven[msg.sender] -= endorsementsWithdrawn_;
+        totalEndorsementsReceived[targetMember_] -= endorsementsWithdrawn_;
 
         // decrement the applicable states for the giver
-        endorsementsGiven[msg.sender][targetMember_] -= tokensStaked_;
-        endorsementsReceived[targetMember_][msg.sender ] -= tokensStaked_;
+        endorsementsGiven[msg.sender][targetMember_] -= endorsementsWithdrawn_;
+        endorsementsReceived[targetMember_][msg.sender ] -= endorsementsWithdrawn_;
 
-        emit EndorsementWithdrawn(msg.sender, targetMember_, tokensStaked_, _OS.currentEpoch());
+        emit EndorsementWithdrawn(msg.sender, targetMember_, endorsementsWithdrawn_, _OS.currentEpoch());
     }
 }
