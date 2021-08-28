@@ -47,7 +47,7 @@ describe("Members Module", function () {
             const userCalls = this.members.connect(this.userA);
             await expect(userCalls.mintEndorsements(50, 10000))
                 .to.emit(this.members, "TokensStaked")
-                .withArgs(this.userA.address, 10000, 50, 0);
+                .withArgs(this.userA.address, 10000, 50, 1);
 
             const userStakes = await this.members.getStakesForMember(this.userA.address);
             expect(userStakes.numStakes).to.equal(1);
@@ -65,7 +65,7 @@ describe("Members Module", function () {
             const userCalls = this.members.connect(this.userA);
             await expect(userCalls.mintEndorsements(100, 1000))
                 .to.emit(this.members, "TokensStaked")
-                .withArgs(this.userA.address, 1000, 100, 0);
+                .withArgs(this.userA.address, 1000, 100, 1);
 
             expect(await this.members.totalEndorsementsAvailableToGive(this.userA.address)).to.equal(3000);
         }) 
@@ -74,7 +74,7 @@ describe("Members Module", function () {
             const userCalls = this.members.connect(this.userA);
             await expect(userCalls.mintEndorsements(150, 1000))
                 .to.emit(this.members, "TokensStaked")
-                .withArgs(this.userA.address, 1000, 150, 0);
+                .withArgs(this.userA.address, 1000, 150, 1);
 
             expect(await this.members.totalEndorsementsAvailableToGive(this.userA.address)).to.equal(6000);
         }) 
@@ -83,7 +83,7 @@ describe("Members Module", function () {
             const userCalls = this.members.connect(this.userA);
             await expect(userCalls.mintEndorsements(200, 1000))
                 .to.emit(this.members, "TokensStaked")
-                .withArgs(this.userA.address, 1000, 200, 0);
+                .withArgs(this.userA.address, 1000, 200, 1);
 
             expect(await this.members.totalEndorsementsAvailableToGive(this.userA.address)).to.equal(10000);
         }) 
@@ -117,11 +117,11 @@ describe("Members Module", function () {
             // Test events
             await expect(userCalls.endorseMember(this.userB.address, 3000))
                 .to.emit(this.members, "EndorsementGiven")
-                .withArgs(this.userA.address, this.userB.address, 3000, 0);
+                .withArgs(this.userA.address, this.userB.address, 3000, 1);
 
             await expect(userCalls.endorseMember(this.dev.address, 5000))
                 .to.emit(this.members, "EndorsementGiven")
-                .withArgs(this.userA.address, this.dev.address, 5000, 0);
+                .withArgs(this.userA.address, this.dev.address, 5000, 1);
 
             expect(await this.members.totalEndorsementsGiven(this.userA.address)).to.equal(8000);
             expect(await this.members.totalEndorsementsReceived(this.userB.address)).to.equal(3000);
@@ -172,7 +172,7 @@ describe("Members Module", function () {
         it("successfully withdraws endorsements members and changes the right state", async function () {
             await expect(this.members.connect(this.userA).withdrawEndorsementFrom(this.userB.address, 2500))
                 .to.emit(this.members, "EndorsementWithdrawn")
-                .withArgs(this.userA.address, this.userB.address, 2500, 0);
+                .withArgs(this.userA.address, this.userB.address, 2500, 1);
                 
             expect(await this.members.totalEndorsementsGiven(this.userA.address)).to.equal(5500);
             expect(await this.members.totalEndorsementsReceived(this.userB.address)).to.equal(500);
@@ -181,7 +181,7 @@ describe("Members Module", function () {
 
             await expect(this.members.connect(this.userA).withdrawEndorsementFrom(this.dev.address, 4000))
                 .to.emit(this.members, "EndorsementWithdrawn")
-                .withArgs(this.userA.address, this.dev.address, 4000, 0);
+                .withArgs(this.userA.address, this.dev.address, 4000, 1);
 
             expect(await this.members.totalEndorsementsGiven(this.userA.address)).to.equal(1500);
             expect(await this.members.totalEndorsementsReceived(this.dev.address)).to.equal(1000);
@@ -215,11 +215,11 @@ describe("Members Module", function () {
             expect(await this.token.balanceOf(this.userA.address)).to.equal(96000);
             expect(await this.token.balanceOf(this.members.address)).to.equal(4000);
             expect(await this.members.totalEndorsementsAvailableToGive(this.userA.address)).to.equal(20000);
-            expect(await this.default.currentEpoch()).to.equal(49);
+            expect(await this.default.currentEpoch()).to.equal(50);
         })
         
         it("Reverts nothing when no stakes have vested/expired", async function() {
-            expect(await this.default.currentEpoch()).to.equal(49);
+            expect(await this.default.currentEpoch()).to.equal(50);
             const userCalls = this.members.connect(this.userA);
             await expect(userCalls.reclaimTokens()).to.be.revertedWith("No expired stakes available for withdraw")
         })
@@ -227,7 +227,7 @@ describe("Members Module", function () {
         it("Unstakes correctly if vested/expired", async function() {
             // epoch 50 -> first stake expires
             await this.default.incrementEpoch();
-            expect(await this.default.currentEpoch()).to.equal(50);
+            expect(await this.default.currentEpoch()).to.equal(51);
 
             let userStakes = await this.members.getStakesForMember(this.userA.address);
             const userCalls = this.members.connect(this.userA);
@@ -235,7 +235,7 @@ describe("Members Module", function () {
             
             await expect(userCalls.reclaimTokens())
                 .to.emit(this.members, "TokensUnstaked")
-                .withArgs(this.userA.address, 1000, 50, 50);
+                .withArgs(this.userA.address, 1000, 50, 51);
 
             userStakes = await this.members.getStakesForMember(this.userA.address);
 
@@ -250,10 +250,10 @@ describe("Members Module", function () {
                 await this.default.incrementEpoch();
             }            
 
-            expect(await this.default.currentEpoch()).to.equal(101);
+            expect(await this.default.currentEpoch()).to.equal(102);
             await expect(userCalls.reclaimTokens())
                 .to.emit(this.members, "TokensUnstaked")
-                .withArgs(this.userA.address, 1000, 100, 101);
+                .withArgs(this.userA.address, 1000, 100, 102);
             
             userStakes = await this.members.getStakesForMember(this.userA.address);
 
@@ -268,10 +268,10 @@ describe("Members Module", function () {
                 await this.default.incrementEpoch();
             }
 
-            expect(await this.default.currentEpoch()).to.equal(152);
+            expect(await this.default.currentEpoch()).to.equal(153);
             await expect(userCalls.reclaimTokens())
                 .to.emit(this.members, "TokensUnstaked")
-                .withArgs(this.userA.address, 1000, 150, 152);
+                .withArgs(this.userA.address, 1000, 150, 153);
             
             userStakes = await this.members.getStakesForMember(this.userA.address);
 
@@ -286,10 +286,10 @@ describe("Members Module", function () {
                 await this.default.incrementEpoch();
             }            
 
-            expect(await this.default.currentEpoch()).to.equal(203);
+            expect(await this.default.currentEpoch()).to.equal(204);
             await expect(userCalls.reclaimTokens())
                 .to.emit(this.members, "TokensUnstaked")
-                .withArgs(this.userA.address, 1000, 200, 203);
+                .withArgs(this.userA.address, 1000, 200, 204);
 
             userStakes = await this.members.getStakesForMember(this.userA.address);
 
@@ -304,7 +304,7 @@ describe("Members Module", function () {
             const userCalls = this.members.connect(this.userA);
             
             await this.default.incrementEpoch();
-            expect(await this.default.currentEpoch()).to.equal(50);
+            expect(await this.default.currentEpoch()).to.equal(51);
 
             await userCalls.endorseMember(this.userB.address, 20000)
             await expect(userCalls.reclaimTokens()).to.be.revertedWith("Not enough endorsements remaining after unstaking");

@@ -29,6 +29,11 @@ contract DefaultOSModule is Ownable {
     constructor(DefaultOS os_) {
         _OS = os_;
     }
+
+    modifier onlyOS() {
+        require(msg.sender == _OS.owner());
+        _;
+    }
 }
 
 contract DefaultOS is Ownable {
@@ -52,5 +57,8 @@ contract DefaultOS is Ownable {
     function incrementEpoch() external onlyOwner {
         currentEpoch++;
     }    
-    
+
+    function transfer(IERC20 token_, address recipient_, uint256 amount_) external onlyOwner {
+        token_.transfer(recipient_, amount_);
+    }
 }
