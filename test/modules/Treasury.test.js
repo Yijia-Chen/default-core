@@ -1,42 +1,6 @@
 const { expect } = require("chai");
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
-// describe("Vault", function () {
-
-//     before(async function () {
-//         this.signers = await ethers.getSigners();
-//         this.dev = this.signers[0];
-//         this.userA = this.signers[1];
-//         this.userB = this.signers[2];
-//         this.userC = this.signers[3];
-//         this.userD  = this.signers[4];
-        
-//         this.DefaultOS = await ethers.getContractFactory("DefaultOS");
-//         this.DefaultTokenInstaller = await ethers.getContractFactory("def_TokenInstaller");
-        
-//         this.defaultOS = await this.DefaultOS.deploy("Default DAO");
-//         this.default = await this.defaultOS.deployed();
-
-//         this.tokenModule = await this.DefaultTokenInstaller.deploy();
-//         await this.tokenModule.deployed();
-//         await this.default.installModule(this.tokenModule.address);
-//         this.token = await ethers.getContractAt("def_Token", await this.default.getModule("0x544b4e")); // "TKN"
-
-//         await this.token.mint(this.userA.address, 100000);
-//         await this.token.mint(this.userB.address, 100000);
-//         await this.token.mint(this.userC.address, 100000);
-
-//         this.Vault = await ethers.getContractFactory("Vault");
-//         this.vault = await this.Vault.deploy(this.token.address, "Default Treasury: DEF Vault", "DEF-VS", 3);
-//         await this.vault.deployed();
-//     })
-
-//     describe("deposits", async function() {
-//         it("only allows owner to call it")
-//         await this.vault.connect(userA).deposit(100000);
-//     })
-// })
-
 describe("Treasury", function () {
 
     before(async function () {
