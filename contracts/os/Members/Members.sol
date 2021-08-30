@@ -47,15 +47,17 @@ contract def_Members is Staking, DefaultOSModule {
     mapping(address => mapping(address => uint256)) public endorsementsReceived; // RECEIVER => mapping (GIVER => AMOUNT)
 
 
-    // endorsement multipliers for staking, based on duration. Increase scale quadratically to incentivize long term holder
-    function _getMultiplierForStakingDuration(uint16 lockDuration_) private pure returns (uint256 multiplier) {
-        if (lockDuration_ < 50 ) { return 0; }
-        else if (lockDuration_ >= 50  && lockDuration_ < 100) { return 1; }
-        else if (lockDuration_ >= 100 && lockDuration_ < 150) { return 3; }
-        else if (lockDuration_ >= 150 && lockDuration_ < 200) { return 6; }
-        else if (lockDuration_ >= 200) { return 10; }
-    }
 
+    // **********************************************************************
+    //                   GOVERNANCE CONTROLLED VARIABLES
+    // **********************************************************************
+
+    // max amount of endorsements a member can receive from another member
+    uint256 public ENDORSEMENT_LIMIT = 300000;
+    
+    function setEndorsementLimit(uint256 newLimit_) external onlyOwner {
+        ENDORSEMENT_LIMIT = newLimit_;
+    }
 
 
     // **********************************************************************
@@ -91,6 +93,16 @@ contract def_Members is Staking, DefaultOSModule {
         emit TokensStaked(msg.sender, tokensStaked_, lockDuration_, _OS.currentEpoch());
     }
 
+    // endorsement multipliers for staking, based on duration. Increase scale quadratically to incentivize long term holder
+    function _getMultiplierForStakingDuration(uint16 lockDuration_) private pure returns (uint256 multiplier) {
+        if (lockDuration_ < 50 ) { return 0; }
+        else if (lockDuration_ >= 50  && lockDuration_ < 100) { return 1; }
+        else if (lockDuration_ >= 100 && lockDuration_ < 150) { return 3; }
+        else if (lockDuration_ >= 150 && lockDuration_ < 200) { return 6; }
+        else if (lockDuration_ >= 200) { return 10; }
+    }
+
+
 
 
     // **********************************************************************
@@ -121,20 +133,24 @@ contract def_Members is Staking, DefaultOSModule {
     //                        ENDORSE ANOTHER MEMBER
     // **********************************************************************
 
-    function endorseMember(address targetMember_, uint256 tokensStaked_) external {
+    function endorseMember(address targetMember_, uint256 endorsementsGiven_) external {
 
         // ensure that the member has enough endorsements available
-        require (totalEndorsementsGiven[msg.sender] + tokensStaked_ <= totalEndorsementsAvailableToGive[msg.sender], "def_Members | endorseMember(): Member does not have available endorsements to give");
+        require (totalEndorsementsGiven[msg.sender] + endorsementsGiven_ <= totalEndorsementsAvailableToGive[msg.sender], "def_Members | endorseMember(): Member does not have available endorsements to give");
+        
+        // ensure that the endorsement doesn't exceed the current member endorsement limit
+        uint256 totalEndorsementsGivenToMember = endorsementsGiven[msg.sender][targetMember_] + endorsementsGiven_;
+        require (totalEndorsementsGivenToMember <= ENDORSEMENT_LIMIT, "def_Members | endorseMember(): total endorsements cannot exceed the max limit");
 
         // increment the applicable states for the giver
-        totalEndorsementsGiven[msg.sender] += tokensStaked_;
-        endorsementsGiven[msg.sender][targetMember_] += tokensStaked_;
+        totalEndorsementsGiven[msg.sender] += endorsementsGiven_;
+        endorsementsGiven[msg.sender][targetMember_] = totalEndorsementsGivenToMember;
 
         // increment the applicable states for the receiver
-        totalEndorsementsReceived[targetMember_] += tokensStaked_;
-        endorsementsReceived[targetMember_][msg.sender] += tokensStaked_;
+        totalEndorsementsReceived[targetMember_] += endorsementsGiven_;
+        endorsementsReceived[targetMember_][msg.sender] += endorsementsGiven_;
 
-        emit EndorsementGiven(msg.sender, targetMember_, tokensStaked_, _OS.currentEpoch());
+        emit EndorsementGiven(msg.sender, targetMember_, endorsementsGiven_, _OS.currentEpoch());
     }
 
 
@@ -143,19 +159,19 @@ contract def_Members is Staking, DefaultOSModule {
     //               WITHDRAW ENDORSEMENTS FROM ANOTHER MEMBER
     // **********************************************************************
 
-    function withdrawEndorsementFrom(address targetMember_, uint256 tokensStaked_) external {
+    function withdrawEndorsementFrom(address targetMember_, uint256 endorsementsWithdrawn_) external {
 
         // ensure that the member has enough endorsements to withdraw
-        require(endorsementsGiven[msg.sender][targetMember_] >= tokensStaked_, "def_Members | withdrawEndorsementFrom(): Not enough endorsements to withdraw");
+        require(endorsementsGiven[msg.sender][targetMember_] >= endorsementsWithdrawn_, "def_Members | withdrawEndorsementFrom(): Not enough endorsements to withdraw");
 
         // decrement the applicable states for the giver
-        totalEndorsementsGiven[msg.sender] -= tokensStaked_;
-        totalEndorsementsReceived[targetMember_] -= tokensStaked_;
+        totalEndorsementsGiven[msg.sender] -= endorsementsWithdrawn_;
+        totalEndorsementsReceived[targetMember_] -= endorsementsWithdrawn_;
 
         // decrement the applicable states for the giver
-        endorsementsGiven[msg.sender][targetMember_] -= tokensStaked_;
-        endorsementsReceived[targetMember_][msg.sender ] -= tokensStaked_;
+        endorsementsGiven[msg.sender][targetMember_] -= endorsementsWithdrawn_;
+        endorsementsReceived[targetMember_][msg.sender ] -= endorsementsWithdrawn_;
 
-        emit EndorsementWithdrawn(msg.sender, targetMember_, tokensStaked_, _OS.currentEpoch());
+        emit EndorsementWithdrawn(msg.sender, targetMember_, endorsementsWithdrawn_, _OS.currentEpoch());
     }
 }

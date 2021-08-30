@@ -1,3 +1,6 @@
+//@dev 
+// testing could be a lot more robust. Good onboarding task to learn the algo.
+
 const { expect } = require("chai");
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
@@ -14,331 +17,459 @@ describe("Peer Rewards Module", function () {
     
         this.DefaultOS = await ethers.getContractFactory("DefaultOS");
         this.DefaultTokenInstaller = await ethers.getContractFactory("def_TokenInstaller");
-        this.DefaultMembershipsInstaller = await ethers.getContractFactory("def_MembersInstaller");
-        this.DefaultMembershipsInstaller = await ethers.getContractFactory("def_PeerRewardsInstaller");
+        
+        this.DefaultMembersInstaller = await ethers.getContractFactory("def_MembersInstaller");
+        this.DefaultPeerRewardsInstaller = await ethers.getContractFactory("def_PeerRewardsInstaller");
     })
 
-    beforeEach(async function() {
         this.defaultOS = await this.DefaultOS.deploy("Default DAO");
         this.default = await this.defaultOS.deployed();
 
-        this.membershipsModule = await this.DefaultMembershipsInstaller.deploy();
-        await this.membershipsModule.deployed();
+        this.membersModule = await this.DefaultMembersInstaller.deploy();
+        await this.membersModule.deployed();
 
         this.tokenModule = await this.DefaultTokenInstaller.deploy();
         await this.tokenModule.deployed();
 
-        this.peerRewardsModule = await this.DefaultTokenInstaller.deploy();
+        this.peerRewardsModule = await this.DefaultPeerRewardsInstaller.deploy();
         await this.peerRewardsModule.deployed();
 
         await this.default.installModule(this.tokenModule.address);
         this.token = await ethers.getContractAt("def_Token", await this.default.getModule("0x544b4e")); // "TKN"
 
-        await this.default.installModule(this.membershipsModule.address);
-        this.memberships = await ethers.getContractAt("def_Memberships", await this.default.getModule("0x4d4252")); // "MBR"
+        await this.default.installModule(this.membersModule.address);
+        this.members = await ethers.getContractAt("def_Members", await this.default.getModule("0x4d4252")); // "MBR"
 
-        await this.default.installModule(this.tokenModule.address);
-        this.token = await ethers.getContractAt("def_PeerRewards", await this.default.getModule("0x504159")); // "PAY"
-
-        await this.memberships.connect(this.user).register(); // the user registers a membership
-
-        await this.token.mint(this.user.address, 5000);
-        await this.token.connect(this.user).approve(this.memberships.address, 5000);
-    })
-
-    it("registers a user", async function () {
-        this.memberStakes = await ethers.getContractAt("MemberStakes", await this.memberships.getMemberStakes(this.user.address)); // "MBR"
-        expect(this.memberStakes.address).not.to.equal(ZERO_ADDRESS);
-        await expect(this.memberships.connect(this.user).register()).to.be.revertedWith("Member already exists");
-    })
-
-    it("requires membership to stake, more than 0 tokens to be staked, and minimum stake duration to be 50 epochs", async function () {
-        expect(await this.token.balanceOf(this.user.address)).to.equal(5000); // sanity check
-
-        await expect(this.memberships.stakeTokens(0,0)).to.be.revertedWith("Membership required to call this function");
-
-        const userCalls = this.memberships.connect(this.user);
-        await expect(userCalls.stakeTokens(50,0)).to.be.revertedWith("Member must stake more than 0 tokens");
-        await expect(userCalls.stakeTokens(49,1000)).to.be.revertedWith("Minimum stake duration is 50 epochs");
-    })
-
-    // @DEV
-    // TEST GAS LIMITS FOR HIGH AMOUNTS TO STAKE —— PRE-PROD
-    // PLEASE NOTICE THIS AND TEST BEFORE RELEASE—— CRITICAL FUNCTIONALITY
-    describe("stakeTokens()", async function () {
-
-        before(async function() {
-            // mint user tokens
-            await this.token.mint(this.user.address, 5000);
-            await this.token.connect(this.user).approve(this.memberships.address, 5000);
-        })
-
-        it("stakes successfully with the right multiplier", async function () {
-            expect(await this.token.balanceOf(this.user.address)).to.equal(5000); // sanity check
-        })
-
-        it("1x multiplier for 50 epochs", async function () {
-            const userCalls = this.memberships.connect(this.user);
-            await expect(userCalls.stakeTokens(50, 1000))
-                .to.emit(this.memberships, "TokensStaked")
-                .withArgs(this.user.address, 1000, 50, 0);
-
-            this.userStakes = await ethers.getContractAt("MemberStakes", await this.memberships.getMemberStakes(this.user.address));
-            expect(await this.userStakes.numStakes()).to.equal(1);
-            expect(await this.userStakes.totalStakedTokens()).to.equal(1000);
-            
-            // test endorsements
-            expect(await this.memberships.totalEndorsementsAvailableToGive(this.user.address)).to.equal(1000);
-
-            // test token transfer successful
-            expect(await this.token.balanceOf(this.user.address)).to.equal(4000);
-            expect(await this.token.balanceOf(this.memberships.address)).to.equal(1000);
-        }) 
-
-        it("3x multiplier for 100 epochs", async function () {
-            const userCalls = this.memberships.connect(this.user);
-            await expect(userCalls.stakeTokens(100, 1000))
-                .to.emit(this.memberships, "TokensStaked")
-                .withArgs(this.user.address, 1000, 100, 0);
-
-            expect(await this.memberships.totalEndorsementsAvailableToGive(this.user.address)).to.equal(3000);
-        }) 
+        await this.token.mint(this.userA.address, 100000);
+        await this.token.connect(this.userA).approve(this.members.address, 100000);
+        await this.members.connect(this.userA).mintEndorsements(200, 100000)
         
-        it("6x multiplier for 150 epochs", async function () {
-            const userCalls = this.memberships.connect(this.user);
-            await expect(userCalls.stakeTokens(150, 1000))
-                .to.emit(this.memberships, "TokensStaked")
-                .withArgs(this.user.address, 1000, 150, 0);
-
-            expect(await this.memberships.totalEndorsementsAvailableToGive(this.user.address)).to.equal(6000);
-        }) 
+        await this.token.mint(this.userB.address, 100000);
+        await this.token.connect(this.userB).approve(this.members.address, 100000)
+        await this.members.connect(this.userB).mintEndorsements(200, 100000);
         
-        it("10x multiplier for 200 epochs", async function () {
-            const userCalls = this.memberships.connect(this.user);
-            await expect(userCalls.stakeTokens(200, 1000))
-                .to.emit(this.memberships, "TokensStaked")
-                .withArgs(this.user.address, 1000, 200, 0);
+        await this.token.mint(this.userC.address, 100000);
+        await this.token.connect(this.userC).approve(this.members.address, 100000);
+        await this.members.connect(this.userC).mintEndorsements(200, 100000)
+        
+        await this.token.mint(this.userD.address, 100000);
+        await this.token.connect(this.userD).approve(this.members.address, 100000);
+        await this.members.connect(this.userD).mintEndorsements(200, 100000)
+        
+        await this.token.mint(this.userE.address, 100000);
+        await this.token.connect(this.userE).approve(this.members.address, 100000);
+        await this.members.connect(this.userE).mintEndorsements(200, 100000)
 
-            expect(await this.memberships.totalEndorsementsAvailableToGive(this.user.address)).to.equal(10000);
-        }) 
+        // A has 900k endorsements
+        await this.members.connect(this.userA).endorseMember(this.userA.address, 300000);
+        await this.members.connect(this.userB).endorseMember(this.userA.address, 300000);
+        await this.members.connect(this.userC).endorseMember(this.userA.address, 300000);
+
+        // B has 899999 endorsements
+        await this.members.connect(this.userA).endorseMember(this.userB.address, 250000);
+        await this.members.connect(this.userB).endorseMember(this.userB.address, 250000);
+        await this.members.connect(this.userC).endorseMember(this.userB.address, 200000);
+        await this.members.connect(this.userD).endorseMember(this.userB.address, 199999);
+
+        // C has 400000 endorsements
+        await this.members.connect(this.userA).endorseMember(this.userC.address, 200000);
+        await this.members.connect(this.userD).endorseMember(this.userC.address, 200000);
+
+        // D has 399999 endorsements
+        await this.members.connect(this.userA).endorseMember(this.userD.address, 200000);
+        await this.members.connect(this.userE).endorseMember(this.userD.address, 199999);
+
+        // E has 0 endorsements
+    })
+    
+    beforeEach(async function() {
+        await this.default.installModule(this.peerRewardsModule.address);
+        this.rewards = await ethers.getContractAt("def_PeerRewards", await this.default.getModule("0x504159")); // "PAY"
     })
 
-    describe("endorseMember()", async function () {
-        beforeEach(async function () {
-            const userCalls = this.memberships.connect(this.user);
-            this.memberships.connect(this.otherUser).register();
-            // user gets 10000 endorsements
-            await userCalls.stakeTokens(200, 1000);
-            expect(await this.memberships.totalEndorsementsAvailableToGive(this.user.address)).to.be.equal(10000);
+    describe("Registration", async function () {
+
+        it("doesn't register members below the reward threshold", async function () {
+            await expect(this.rewards.connect(this.userD).register()).to.be.revertedWith("def_PeerRewards | register(): not enough endorsements to participate!");
+            await expect(this.rewards.connect(this.userE).register()).to.be.revertedWith("def_PeerRewards | register(): not enough endorsements to participate!");
         })
 
-        it("reverts if target user is not a registered member of the DAO", async function () {
-            await expect(this.memberships.connect(this.user).endorseMember(this.dev.address, 0)).to.be.revertedWith("Target member is not registered");
+        it("registers members to receive rewards even if they don't qualify to allocate", async function () {
+            
+            await expect(this.rewards.connect(this.userB).register())
+                .to.emit(this.rewards, "MemberRegistered")
+                .withArgs(this.userB.address, 2, 0)
+            
+            await expect(this.rewards.connect(this.userC).register())
+                .to.emit(this.rewards, "MemberRegistered")
+                .withArgs(this.userC.address, 2, 0)
+
+            expect(await this.rewards.pointsRegisteredForEpoch(2, this.userB.address)).to.equal(0);
+            expect(await this.rewards.pointsRegisteredForEpoch(2, this.userC.address)).to.equal(0);
+            expect(await this.rewards.totalPointsRegisteredForEpoch(2)).to.equal(0);
+
+            expect(await this.rewards.eligibleForRewards(2, this.userB.address)).to.equal(true);
+            expect(await this.rewards.eligibleForRewards(2, this.userC.address)).to.equal(true);
         })
 
-        it("reverts if the user does not have enough endorsements to give", async function () {
-            await expect(this.memberships.connect(this.user).endorseMember(this.otherUser.address, 10001)).to.be.revertedWith("Member does not have available endorsements to give");
-        })
+        it("registers members to receive and give rewards if they qualify", async function () {
+            await expect(this.rewards.connect(this.userA).register())
+                .to.emit(this.rewards, "MemberRegistered")
+                .withArgs(this.userA.address, 2, 90000);
 
-        it("successfully endorses multiple registered members and changes the right state", async function () {
-            await this.memberships.connect(this.dev).register();
-
-            const userCalls = this.memberships.connect(this.user);
-
-            // Test events
-            await expect(userCalls.endorseMember(this.otherUser.address, 3000))
-                .to.emit(this.memberships, "EndorsementGiven")
-                .withArgs(this.user.address, this.otherUser.address, 3000, 0);
-
-            await expect(userCalls.endorseMember(this.dev.address, 5000))
-                .to.emit(this.memberships, "EndorsementGiven")
-                .withArgs(this.user.address, this.dev.address, 5000, 0);
-
-            expect(await this.memberships.totalEndorsementsGiven(this.user.address)).to.equal(8000);
-            expect(await this.memberships.totalEndorsementsReceived(this.otherUser.address)).to.equal(3000);
-            expect(await this.memberships.totalEndorsementsReceived(this.dev.address)).to.equal(5000);
-
-            expect(await this.memberships.endorsementsGiven(this.user.address, this.otherUser.address)).to.equal(3000); 
-            expect(await this.memberships.endorsementsReceived(this.otherUser.address, this.user.address)).to.equal(3000); 
-
-            expect(await this.memberships.endorsementsGiven(this.user.address, this.dev.address)).to.equal(5000); 
-            expect(await this.memberships.endorsementsReceived(this.dev.address, this.user.address)).to.equal(5000); 
-        })
-
-        it("successfully endorses registered members from multiple members", async function () {
-            await this.memberships.connect(this.dev).register();
-            await this.token.mint(this.dev.address, 5000);
-            await this.token.approve(this.memberships.address, 5000);
-
-            await this.memberships.stakeTokens(50, 1200);
-
-            // Test events
-            await this.memberships.connect(this.user).endorseMember(this.otherUser.address, 3000)
-            await this.memberships.connect(this.dev).endorseMember(this.otherUser.address, 1100)
-
-            expect(await this.memberships.totalEndorsementsReceived(this.otherUser.address)).to.equal(4100);
-
-            expect(await this.memberships.endorsementsGiven(this.user.address, this.otherUser.address)).to.equal(3000); 
-            expect(await this.memberships.endorsementsReceived(this.otherUser.address, this.user.address)).to.equal(3000); 
-
-            expect(await this.memberships.endorsementsGiven(this.dev.address, this.otherUser.address)).to.equal(1100); 
-            expect(await this.memberships.endorsementsReceived(this.otherUser.address, this.dev.address)).to.equal(1100); 
+            expect(await this.rewards.pointsRegisteredForEpoch(2, this.userA.address)).to.equal(90000); // 10% because of streak
+            expect(await this.rewards.totalPointsRegisteredForEpoch(2)).to.equal(90000);
+            expect(await this.rewards.eligibleForRewards(2, this.userA.address)).to.equal(true);
         })
     })
 
-    describe("withdrawEndorsementFrom()", async function () {
-        beforeEach(async function () {
-            const userCalls = this.memberships.connect(this.user);
-            await this.memberships.connect(this.dev).register();
-            await this.memberships.connect(this.otherUser).register();
+    describe("Allocation List Configuration", async function () {
+        // before(async function() {
 
-            // user gets 10000 endorsements
-            await userCalls.stakeTokens(200, 1000);
-            expect(await this.memberships.totalEndorsementsAvailableToGive(this.user.address)).to.be.equal(10000);
+        //     // add to existing endorsements for allocations
 
-            await userCalls.endorseMember(this.otherUser.address, 3000);
-            await userCalls.endorseMember(this.dev.address, 5000);
+        //     // A has 1.2M endorsements
+        //     // await this.members.connect(this.userA).endorseMember(this.userA.address, 300000);
+        //     // await this.members.connect(this.userB).endorseMember(this.userA.address, 300000);
+        //     // await this.members.connect(this.userC).endorseMember(this.userA.address, 300000);
+        //     await this.members.connect(this.userD).endorseMember(this.userA.address, 300000);
+
+        //     // B has 1M endorsements
+        //     // await this.members.connect(this.userA).endorseMember(this.userB.address, 250000);
+        //     // await this.members.connect(this.userB).endorseMember(this.userB.address, 250000);
+        //     // await this.members.connect(this.userC).endorseMember(this.userB.address, 200000);
+        //     // await this.members.connect(this.userD).endorseMember(this.userB.address, 199999);
+        //     await this.members.connect(this.userC).endorseMember(this.userB.address, 100000);
+        //     await this.members.connect(this.userD).endorseMember(this.userB.address, 1);
+
+
+        //     // C has 900k endorsements
+        //     // await this.members.connect(this.userA).endorseMember(this.userC.address, 200000);
+        //     // await this.members.connect(this.userD).endorseMember(this.userC.address, 200000);
+        //     await this.members.connect(this.userC).endorseMember(this.userC.address, 200000);
+        //     await this.members.connect(this.userE).endorseMember(this.userC.address, 300000);
+
+        //     // D has 950k endorsements
+        //     // await this.members.connect(this.userA).endorseMember(this.userD.address, 200000);
+        //     // await this.members.connect(this.userE).endorseMember(this.userD.address, 199999);
+        //     await this.members.connect(this.userE).endorseMember(this.userD.address, 100001);
+        //     await this.members.connect(this.userB).endorseMember(this.userD.address, 300000);
+        //     await this.members.connect(this.userD).endorseMember(this.userD.address, 150000)
+        // })
+
+        // it("sanity check", async function() {
+        //     expect(await this.members.totalEndorsementsReceived(this.userA.address)).to.equal(1200000);
+        //     expect(await this.members.totalEndorsementsReceived(this.userB.address)).to.equal(1000000);
+        //     expect(await this.members.totalEndorsementsReceived(this.userC.address)).to.equal(900000);
+        //     expect(await this.members.totalEndorsementsReceived(this.userD.address)).to.equal(950000);
+        // })
+
+        it("doesn't allow members to allocate to themselves", async function() {
+            await expect(this.rewards.connect(this.userA).configureAllocation(this.userA.address, 2)).to.be.revertedWith("def_PeerRewards | configureAllocation(): cannot allocate to self!");
         })
 
-        it("reverts if the user does not have enough endorsements to withdraw", async function () {
-            await expect(this.memberships.connect(this.user).endorseMember(this.otherUser.address, 10001)).to.be.revertedWith("Member does not have available endorsements to give");
+        it("adds an allocation to empty list", async function() {
+            await this.rewards.connect(this.userA).configureAllocation(this.userB.address, 2);
+            const allocList = await this.rewards.getAllocationsListFor(this.userA.address);
+            expect(allocList.numAllocs).to.equal(1);
+            expect(allocList.highestPts).to.equal(2);
+            expect(allocList.lowestPts).to.equal(2);
+            expect(allocList.totalPts).to.equal(2);
+            expect(allocList.TAIL).to.equal(this.userB.address);
         })
 
-        it("successfully withdraws endorsements members and changes the right state", async function () {
-            await expect(this.memberships.connect(this.user).withdrawEndorsementFrom(this.otherUser.address, 2500))
-                .to.emit(this.memberships, "EndorsementWithdrawn")
-                .withArgs(this.user.address, this.otherUser.address, 2500, 0);
-                
-            expect(await this.memberships.totalEndorsementsGiven(this.user.address)).to.equal(5500);
-            expect(await this.memberships.totalEndorsementsReceived(this.otherUser.address)).to.equal(500);
-            expect(await this.memberships.endorsementsGiven(this.user.address, this.otherUser.address)).to.equal(500); 
-            expect(await this.memberships.endorsementsReceived(this.otherUser.address, this.user.address)).to.equal(500); 
+        it("remove allocation from list", async function() {
+            await this.rewards.connect(this.userA).configureAllocation(this.userB.address, 2);
+            await this.rewards.connect(this.userA).configureAllocation(this.userB.address, 0);
+            const allocList = await this.rewards.getAllocationsListFor(this.userA.address);
+            expect(allocList.numAllocs).to.equal(0);
+            expect(allocList.highestPts).to.equal(0);
+            expect(allocList.lowestPts).to.equal(0);
+            expect(allocList.totalPts).to.equal(0);
+            expect(allocList.TAIL).to.equal(ZERO_ADDRESS);
+        })
 
-            await expect(this.memberships.connect(this.user).withdrawEndorsementFrom(this.dev.address, 4000))
-                .to.emit(this.memberships, "EndorsementWithdrawn")
-                .withArgs(this.user.address, this.dev.address, 4000, 0);
+        it("adds an allocation to non empty list", async function() {
+            await this.rewards.connect(this.userA).configureAllocation(this.userB.address, 1);
+            await this.rewards.connect(this.userA).configureAllocation(this.userC.address, 6);
+            const allocList = await this.rewards.getAllocationsListFor(this.userA.address);
+            expect(allocList.numAllocs).to.equal(2);
+            expect(allocList.highestPts).to.equal(6);
+            expect(allocList.lowestPts).to.equal(1);
+            expect(allocList.totalPts).to.equal(7);
+            expect(allocList.TAIL).to.equal(this.userC.address);
+        })
 
-            expect(await this.memberships.totalEndorsementsGiven(this.user.address)).to.equal(1500);
-            expect(await this.memberships.totalEndorsementsReceived(this.dev.address)).to.equal(1000);
-            expect(await this.memberships.endorsementsGiven(this.user.address, this.dev.address)).to.equal(1000); 
-            expect(await this.memberships.endorsementsReceived(this.dev.address, this.user.address)).to.equal(1000); 
+        it("changes an allocation in non empty list", async function() {
+            await this.rewards.connect(this.userA).configureAllocation(this.userB.address, 1);
+            await this.rewards.connect(this.userA).configureAllocation(this.userC.address, 6);
+            await this.rewards.connect(this.userA).configureAllocation(this.userB.address, 3);
+
+            const allocList = await this.rewards.getAllocationsListFor(this.userA.address);
+            expect(allocList.numAllocs).to.equal(2);
+            expect(allocList.highestPts).to.equal(6);
+            expect(allocList.lowestPts).to.equal(3);
+            expect(allocList.totalPts).to.equal(9);
+            expect(allocList.TAIL).to.equal(this.userC.address);
+        })
+
+        it("removes an allocation in non empty list", async function() {
+            await this.rewards.connect(this.userA).configureAllocation(this.userB.address, 1);
+            await this.rewards.connect(this.userA).configureAllocation(this.userC.address, 6);
+            await this.rewards.connect(this.userA).configureAllocation(this.userC.address, 0);
+
+            const allocList = await this.rewards.getAllocationsListFor(this.userA.address);
+            expect(allocList.numAllocs).to.equal(1);
+            expect(allocList.highestPts).to.equal(1);
+            expect(allocList.lowestPts).to.equal(1);
+            expect(allocList.totalPts).to.equal(1);
+            expect(allocList.TAIL).to.equal(this.userB.address);
+        })
+
+        it("removes an allocation in non empty list x2", async function() {
+            await this.rewards.connect(this.userA).configureAllocation(this.userC.address, 1);
+            await this.rewards.connect(this.userA).configureAllocation(this.userB.address, 5);
+            await this.rewards.connect(this.userA).configureAllocation(this.userC.address, 0);
+            // await this.rewards.connect(this.userA).configureAllocation(this.userC.address, 10);
+
+            const allocList = await this.rewards.getAllocationsListFor(this.userA.address);
+            expect(allocList.numAllocs).to.equal(1);
+            expect(allocList.highestPts).to.equal(5);
+            expect(allocList.lowestPts).to.equal(5);
+            expect(allocList.totalPts).to.equal(5);
+            expect(allocList.TAIL).to.equal(this.userB.address);
+        })
+
+        it("re-adds an allocation", async function() {
+            await this.rewards.connect(this.userA).configureAllocation(this.userC.address, 1);
+            await this.rewards.connect(this.userA).configureAllocation(this.userB.address, 5);
+            await this.rewards.connect(this.userA).configureAllocation(this.userC.address, 0);
+            await this.rewards.connect(this.userA).configureAllocation(this.userC.address, 10);
+
+            const allocList = await this.rewards.getAllocationsListFor(this.userA.address);
+            expect(allocList.numAllocs).to.equal(2);
+            expect(allocList.highestPts).to.equal(10);
+            expect(allocList.lowestPts).to.equal(5);
+            expect(allocList.totalPts).to.equal(15);
+            expect(allocList.TAIL).to.equal(this.userC.address);
+        })
+
+    })
+
+    describe("Committing Allocations", async function () {
+        
+        it("requires the member to have registered in the previous epoch", async function() {
+            await expect(this.rewards.connect(this.userA).commitAllocation()).to.be.revertedWith("def_PeerRewards | commitAllocation(): from member did not register for peer rewards this epoch");
+        })
+
+        it("requires the member to have enough endorsements for the allocation", async function() {
+            await this.rewards.connect(this.userA).register();
+            await this.default.incrementEpoch(); // epoch: 2
+
+            await this.members.connect(this.userA).withdrawEndorsementFrom(this.userA.address, 1);
+            await expect(this.rewards.connect(this.userA).commitAllocation()).to.be.revertedWith("def_PeerRewards | commitAllocation(): from member does not enough endorsements received to participate");
+
+            // restore endorsement for next tests
+            await this.members.connect(this.userA).endorseMember(this.userA.address, 1);
+        })
+
+
+        it("requires the member allocations to be within the mix/max threshold", async function() {
+            await this.rewards.connect(this.userA).register();
+            await this.default.incrementEpoch(); // epoch: 3
+
+
+            await this.rewards.connect(this.userA).configureAllocation(this.userB.address, 1);
+            await this.rewards.connect(this.userA).configureAllocation(this.userC.address, 2);
+            await this.rewards.connect(this.userA).configureAllocation(this.userD.address, 3);
+            await this.rewards.connect(this.userA).configureAllocation(this.userE.address, 5);
+            
+            await expect(this.rewards.connect(this.userA).commitAllocation()).to.be.revertedWith("def_PeerRewards | commitAllocation(): allocations do not comply with threshold boundaries");
+
+            await this.rewards.connect(this.userA).configureAllocation(this.userB.address, 4);
+            await this.rewards.connect(this.userA).configureAllocation(this.userC.address, 26);
+            await this.rewards.connect(this.userA).configureAllocation(this.userD.address, 35);
+            await this.rewards.connect(this.userA).configureAllocation(this.userE.address, 35);
+
+            await expect(this.rewards.connect(this.userA).commitAllocation()).to.be.revertedWith("def_PeerRewards | commitAllocation(): allocations do not comply with threshold boundaries");
+
+        })
+
+        it("requires receiving allocations to meet the reward threshold", async function() {
+            await this.rewards.connect(this.userA).register();
+            await this.default.incrementEpoch(); // epoch: 4
+
+            await this.rewards.connect(this.userA).configureAllocation(this.userB.address, 1);
+            await this.rewards.connect(this.userA).configureAllocation(this.userC.address, 2);
+            await this.rewards.connect(this.userA).configureAllocation(this.userD.address, 3);
+            await this.rewards.connect(this.userA).configureAllocation(this.userE.address, 4);
+            
+            await expect(this.rewards.connect(this.userA).commitAllocation()).to.be.revertedWith("def_PeerRewards | commitAllocation(): to member does not have enough endorsements to receive allocation");
+        })
+
+        it("requires receiving members to register for rewards each epoch", async function() {
+            await this.rewards.connect(this.userA).register();
+            await this.default.incrementEpoch(); // epoch: 5
+
+            await this.rewards.connect(this.userA).configureAllocation(this.userB.address, 1);
+            await this.rewards.connect(this.userA).configureAllocation(this.userC.address, 2);
+            await this.rewards.connect(this.userA).configureAllocation(this.userD.address, 3);
+            await this.rewards.connect(this.userA).configureAllocation(this.userE.address, 4);
+
+            await this.members.connect(this.userA).endorseMember(this.userD.address, 1);
+            await this.members.connect(this.userD).endorseMember(this.userE.address, 300000);
+            await this.members.connect(this.userC).endorseMember(this.userE.address, 100000);
+
+            await expect(this.rewards.connect(this.userA).commitAllocation()).to.be.revertedWith("def_PeerRewards | commitAllocation(): member did not register for rewards this epoch");
+        })
+
+
+        it("requires receiving members to register for rewards each epoch", async function() {
+            // endorsements carry over from last test
+            await this.rewards.connect(this.userA).register();
+            await this.rewards.connect(this.userB).register();
+            await this.rewards.connect(this.userC).register();
+            await this.rewards.connect(this.userD).register();
+            await this.rewards.connect(this.userE).register();
+
+            await this.default.incrementEpoch(); // epoch: 6
+
+            await this.rewards.connect(this.userA).configureAllocation(this.userB.address, 1);
+            await this.rewards.connect(this.userA).configureAllocation(this.userC.address, 2);
+            await this.rewards.connect(this.userA).configureAllocation(this.userD.address, 3);
+            await this.rewards.connect(this.userA).configureAllocation(this.userE.address, 4);
+
+            await this.rewards.connect(this.userA).commitAllocation();
+
+            expect(await this.rewards.mintableRewards(6, this.userB.address)).to.equal(500000 * 1 / 10);
+            expect(await this.rewards.mintableRewards(6, this.userC.address)).to.equal(500000 * 2 / 10);
+            expect(await this.rewards.mintableRewards(6, this.userD.address)).to.equal(500000 * 3 / 10);
+            expect(await this.rewards.mintableRewards(6, this.userE.address)).to.equal(500000 * 4 / 10);
+
+            // don't let members commit twice in the same epoch
+            await expect(this.rewards.connect(this.userA).commitAllocation()).to.be.revertedWith("def_PeerRewards | commitAllocation(): cannot participate more than once per epoch")
         })
     })
 
-    describe("unstakeTokens()", async function () {
-
-        beforeEach(async function () {
-            this.memberStakes = await ethers.getContractAt("MemberStakes", await this.memberships.getMemberStakes(this.user.address)); // "MBR"
-            
-            const userCalls = this.memberships.connect(this.user);
-            
-            await userCalls.stakeTokens(50, 1000);
-            await this.default.incrementEpoch();
-
-            await userCalls.stakeTokens(100, 1000);
-            await this.default.incrementEpoch();
-
-            await userCalls.stakeTokens(150, 1000);
-            await this.default.incrementEpoch();                
-
-            await userCalls.stakeTokens(200, 1000);
-
-            for (let i = 1; i <= 46; i++) {
-                await this.default.incrementEpoch();
-            }            
+    describe("claiming rewards", async function() {
+        it("cannot be claimed in the same epoch", async function () {
+            await expect(this.rewards.connect(this.userB).claimRewards()).to.be.revertedWith("def_PeerRewards | claimRewards(): rewards claimed cannot be empty");
         })
 
-        it("sanity check", async function() {
-            expect(await this.token.balanceOf(this.user.address)).to.equal(1000);
-            expect(await this.token.balanceOf(this.memberships.address)).to.equal(4000);
-            expect(await this.memberships.totalEndorsementsAvailableToGive(this.user.address)).to.equal(20000);
-            expect(await this.default.currentEpoch()).to.equal(49);
-        })
-        
-        it("Reverts nothing when no stakes have vested/expired", async function() {
-            expect(await this.default.currentEpoch()).to.equal(49);
-            const userCalls = this.memberships.connect(this.user);
-            await expect(userCalls.unstakeTokens()).to.be.revertedWith("No expired stakes available for withdraw")
-        })
+        it("rewards can be claimed after 1 epoch", async function () {
+            // allocate rewards
+            await this.rewards.connect(this.userA).register();
+            await this.rewards.connect(this.userB).register();
+            await this.rewards.connect(this.userC).register();
+            await this.rewards.connect(this.userD).register();
+            await this.rewards.connect(this.userE).register();
 
-        it("Unstakes correctly if vested/expired", async function() {
-            // epoch 50 -> first stake expires
-            await this.default.incrementEpoch();
-            expect(await this.default.currentEpoch()).to.equal(50);
+            await this.default.incrementEpoch(); // epoch: 7
 
-            this.userStakes = await ethers.getContractAt("MemberStakes", await this.memberships.getMemberStakes(this.user.address));
-            const userCalls = this.memberships.connect(this.user);
-            expect(await this.userStakes.numStakes()).to.equal(4);
+            await this.rewards.connect(this.userA).configureAllocation(this.userB.address, 1);
+            await this.rewards.connect(this.userA).configureAllocation(this.userC.address, 2);
+            await this.rewards.connect(this.userA).configureAllocation(this.userD.address, 3);
+            await this.rewards.connect(this.userA).configureAllocation(this.userE.address, 4);
+
+            await this.rewards.connect(this.userA).commitAllocation();
+            await this.default.incrementEpoch(); // epoch: 8
             
-            await expect(userCalls.unstakeTokens())
-                .to.emit(this.memberships, "TokensUnstaked")
-                .withArgs(this.user.address, 1000, 50, 50);
-
-            expect(await this.userStakes.numStakes()).to.equal(3);
-            expect(await this.userStakes.totalStakedTokens()).to.equal(3000);
-            expect(await this.memberships.totalEndorsementsAvailableToGive(this.user.address)).to.equal(19000);
-            expect(await this.token.balanceOf(this.user.address)).to.equal(2000);
-            expect(await this.token.balanceOf(this.memberships.address)).to.equal(3000);
-
-            // epoch 101 -> second stake expires
-            for (let i = 0; i <= 50; i++) {
-                await this.default.incrementEpoch();
-            }            
-
-            expect(await this.default.currentEpoch()).to.equal(101);
-            await expect(userCalls.unstakeTokens())
-                .to.emit(this.memberships, "TokensUnstaked")
-                .withArgs(this.user.address, 1000, 100, 101);
-
-            expect(await this.userStakes.numStakes()).to.equal(2);
-            expect(await this.userStakes.totalStakedTokens()).to.equal(2000);
-            expect(await this.memberships.totalEndorsementsAvailableToGive(this.user.address)).to.equal(16000);
-            expect(await this.token.balanceOf(this.user.address)).to.equal(3000);
-            expect(await this.token.balanceOf(this.memberships.address)).to.equal(2000);
-
-            // epoch 152 -> third stake expires
-             for (let i = 0; i <= 50; i++) {
-                await this.default.incrementEpoch();
-            }
-
-            expect(await this.default.currentEpoch()).to.equal(152);
-            await expect(userCalls.unstakeTokens())
-                .to.emit(this.memberships, "TokensUnstaked")
-                .withArgs(this.user.address, 1000, 150, 152);
-
-            expect(await this.userStakes.numStakes()).to.equal(1);
-            expect(await this.userStakes.totalStakedTokens()).to.equal(1000);
-            expect(await this.memberships.totalEndorsementsAvailableToGive(this.user.address)).to.equal(10000);
-            expect(await this.token.balanceOf(this.user.address)).to.equal(4000);
-            expect(await this.token.balanceOf(this.memberships.address)).to.equal(1000);
-
-            // epoch 203 -> last stake expires
-            for (let i = 0; i <= 50; i++) {
-                await this.default.incrementEpoch();
-            }            
-
-            expect(await this.default.currentEpoch()).to.equal(203);
-            await expect(userCalls.unstakeTokens())
-                .to.emit(this.memberships, "TokensUnstaked")
-                .withArgs(this.user.address, 1000, 200, 203);
-
-            expect(await this.userStakes.numStakes()).to.equal(0);
-            expect(await this.userStakes.totalStakedTokens()).to.equal(0);
-            expect(await this.memberships.totalEndorsementsAvailableToGive(this.user.address)).to.equal(0);
-            expect(await this.token.balanceOf(this.user.address)).to.equal(5000);
-            expect(await this.token.balanceOf(this.memberships.address)).to.equal(0);
-
-        })
-        
-        it("reverts if user doesn't have enough endorsements after unstaking", async function () {
-            const userCalls = this.memberships.connect(this.user);
-            this.memberships.connect(this.otherUser).register();
+            expect(await this.rewards.mintableRewards(7, this.userB.address)).to.equal(50000);
+            expect(await this.rewards.claimedRewards(7, this.userB.address)).to.equal(false);
             
-            await this.default.incrementEpoch();
-            expect(await this.default.currentEpoch()).to.equal(50);
+            await expect(this.rewards.connect(this.userB).claimRewards())
+            .to.emit(this.rewards, "RewardsClaimed")
+            .withArgs(this.userB.address, 50000, 8);
 
-            await userCalls.endorseMember(this.otherUser.address, 20000)
-            await expect(userCalls.unstakeTokens()).to.be.revertedWith("Not enough endorsements remaining after unstaking");
+            expect(await this.rewards.claimedRewards(7, this.userB.address)).to.equal(true);
+        })
+
+        it("rewards can be claimed after 1 epoch", async function () {
+            // allocate rewards
+            await this.rewards.connect(this.userA).register();
+            await this.rewards.connect(this.userB).register();
+            await this.rewards.connect(this.userC).register();
+            await this.rewards.connect(this.userD).register();
+            await this.rewards.connect(this.userE).register();
+
+            await this.default.incrementEpoch(); // epoch: 9
+
+            await this.rewards.connect(this.userA).configureAllocation(this.userB.address, 1);
+            await this.rewards.connect(this.userA).configureAllocation(this.userC.address, 2);
+            await this.rewards.connect(this.userA).configureAllocation(this.userD.address, 3);
+            await this.rewards.connect(this.userA).configureAllocation(this.userE.address, 4);
+
+            await this.rewards.connect(this.userA).commitAllocation();
+
+            // register for epoch 10
+            await this.rewards.connect(this.userA).register();
+            await this.rewards.connect(this.userB).register();
+            await this.rewards.connect(this.userC).register();
+            await this.rewards.connect(this.userD).register();
+            await this.rewards.connect(this.userE).register();
+
+            await this.default.incrementEpoch(); // 10
+            await this.rewards.connect(this.userA).commitAllocation();
+
+            await this.rewards.connect(this.userA).register();
+            await this.rewards.connect(this.userB).register();
+            await this.rewards.connect(this.userC).register();
+            await this.rewards.connect(this.userD).register();
+            await this.rewards.connect(this.userE).register();
+
+            await this.default.incrementEpoch(); // 11
+            await this.rewards.connect(this.userA).commitAllocation();
+
+
+            await this.default.incrementEpoch(); // 12
+            await this.default.incrementEpoch(); // 13
+
+            expect(await this.rewards.mintableRewards(9, this.userB.address)).to.equal(50000);
+            expect(await this.rewards.claimedRewards(9, this.userB.address)).to.equal(false);
+
+            expect(await this.rewards.mintableRewards(10, this.userB.address)).to.equal(50000);
+            expect(await this.rewards.claimedRewards(10, this.userB.address)).to.equal(false);
+
+            expect(await this.rewards.mintableRewards(11, this.userB.address)).to.equal(50000);
+            expect(await this.rewards.claimedRewards(11, this.userB.address)).to.equal(false);
+
+            await expect(this.rewards.connect(this.userB).claimRewards())
+                .to.emit(this.rewards, "RewardsClaimed")
+                .withArgs(this.userB.address, 150000, 13);
+
+            expect(await this.token.balanceOf(this.userB.address)).to.equal(200000);
+
+            expect(await this.rewards.claimedRewards(9, this.userB.address)).to.equal(true);
+            expect(await this.rewards.claimedRewards(10, this.userB.address)).to.equal(true);
+            expect(await this.rewards.claimedRewards(11, this.userB.address)).to.equal(true);
+
+            await expect(this.rewards.connect(this.userB).claimRewards()).to.be.revertedWith("def_PeerRewards | claimRewards(): rewards claimed cannot be empty")
+        })
+
+        it("expires rewards after 4 epochs", async function() {
+            // allocate rewards
+            await this.rewards.connect(this.userA).register();
+            await this.rewards.connect(this.userB).register();
+            await this.rewards.connect(this.userC).register();
+            await this.rewards.connect(this.userD).register();
+            await this.rewards.connect(this.userE).register();
+
+            await this.default.incrementEpoch(); // epoch: 14
+
+            await this.rewards.connect(this.userA).configureAllocation(this.userB.address, 1);
+            await this.rewards.connect(this.userA).configureAllocation(this.userC.address, 2);
+            await this.rewards.connect(this.userA).configureAllocation(this.userD.address, 3);
+            await this.rewards.connect(this.userA).configureAllocation(this.userE.address, 4);
+
+            await this.rewards.connect(this.userA).commitAllocation();
+            
+            await this.default.incrementEpoch(); // epoch: 15
+            await this.default.incrementEpoch(); // epoch: 16
+            await this.default.incrementEpoch(); // epoch: 17
+            await this.default.incrementEpoch(); // epoch: 18
+            await this.default.incrementEpoch(); // epoch: 19
+
+            await expect(this.rewards.connect(this.userB).claimRewards()).to.be.revertedWith("def_PeerRewards | claimRewards(): rewards claimed cannot be empty")
         })
     })
 })
