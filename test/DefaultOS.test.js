@@ -38,39 +38,9 @@ describe("DefaultOS.sol", function () {
 
     describe("DefaultOS", async function() {
       beforeEach(async function () {
-        this.DefaultPeerRewardInstaller = await ethers.getContractFactory("def_PeerRewardsInstaller");
-        this.peerRewardsModule = await this.DefaultPeerRewardInstaller.deploy();
-        await this.peerRewardsModule.deployed();
-      })
-
-      it("increments epoch correctly", async function() {
-        const sevenDays = 7 * 24 * 60 * 60;        
-
-        const blockNumBefore = await ethers.provider.getBlockNumber();
-        const blockBefore = await ethers.provider.getBlock(blockNumBefore);
-        const timestampBefore = blockBefore.timestamp;
-
-        await ethers.provider.send('evm_setNextBlockTimestamp', [timestampBefore + sevenDays])
-        await ethers.provider.send('evm_mine');
-
-        await this.default.incrementEpoch()
-        const newEpoch = await this.default.currentEpoch()
-
-        expect(newEpoch).to.equal(1);
-      })
-
-      it("rejects premature increment epoch", async function() {
-        const sixDays = 6 * 24 * 60 * 60;        
-
-        const blockNumBefore = await ethers.provider.getBlockNumber();
-        const blockBefore = await ethers.provider.getBlock(blockNumBefore);
-        const timestampBefore = blockBefore.timestamp;
-
-        await ethers.provider.send('evm_setNextBlockTimestamp', [timestampBefore + sixDays])
-        await ethers.provider.send('evm_mine');
-
-        // https://github.com/EthWorks/Waffle/issues/95
-        await expect(this.default.incrementEpoch()).to.be.revertedWith("DefaultOS.sol: cannot incrementEpoch() before deadline");
+        this.DefaultEpochInstaller = await ethers.getContractFactory("def_EpochInstaller");
+        this.epochModule = await this.DefaultEpochInstaller.deploy();
+        await this.epochModule.deployed();
       })
     })
 })

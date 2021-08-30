@@ -40,13 +40,10 @@ contract DefaultOSModule is Ownable {
 
 contract DefaultOS is Ownable {
 
-    string public organizationName;
-    uint16 public currentEpoch = 1;
-    uint256 public epochTime;
+    string public organizationName;    
     mapping(bytes3 => address) public MODULES;
 
     constructor(string memory organizationName_, string memory organizationId_, DaoTracker daoTracker_) {
-        epochTime = block.timestamp;
         organizationName = organizationName_;
         daoTracker_.setDao(organizationId_, address(this));
     }
@@ -58,12 +55,6 @@ contract DefaultOS is Ownable {
     function getModule(bytes3 moduleKeycode_) external view returns (address) {
         return MODULES[moduleKeycode_];
     }
-
-    function incrementEpoch() external onlyOwner {        
-        require(block.timestamp >= epochTime + (7 days), "DefaultOS.sol: cannot incrementEpoch() before deadline");
-        epochTime = block.timestamp;
-        currentEpoch++;
-    }    
 
     function transfer(IERC20 token_, address recipient_, uint256 amount_) external onlyOwner {
         token_.transfer(recipient_, amount_);
