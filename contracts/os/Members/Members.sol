@@ -67,9 +67,9 @@ contract def_Members is Staking, DefaultOSModule {
         require (getMemberForAlias[alias_] == address(0), "def_Members | (): Members | setAlias(): alias is already taken");
         getAliasForMember[msg.sender] = alias_;
         getMemberForAlias[alias_] = msg.sender;
+
+        emit MemberRegistered(msg.sender, alias_, _OS.currentEpoch());
     }
-
-
 
     // **********************************************************************
     //                     MINT ENDORSEMENTS TO GIVE

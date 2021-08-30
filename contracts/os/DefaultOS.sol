@@ -7,6 +7,8 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import "hardhat/console.sol";
 
+import "./DaoTracker.sol";
+
 abstract contract DefaultOSModuleInstaller is Ownable {
     bytes3 public moduleKeycode;
 
@@ -35,10 +37,13 @@ contract DefaultOS is Ownable {
 
     string public organizationName;
     uint16 public currentEpoch = 0;
+    uint256 public epochTime;
     mapping(bytes3 => address) public MODULES;
 
-    constructor(string memory organizationName_) {
+    constructor(string memory organizationName_, string memory organizationId_, DaoTracker daoTracker_) {
+        epochTime = block.timestamp;
         organizationName = organizationName_;
+        daoTracker_.setDao(organizationId_, address(this));
     }
 
     function installModule(DefaultOSModuleInstaller installer_) external onlyOwner {
@@ -49,7 +54,9 @@ contract DefaultOS is Ownable {
         return MODULES[moduleKeycode_];
     }
 
-    function incrementEpoch() external onlyOwner {
+    function incrementEpoch() external onlyOwner {        
+        require(block.timestamp >= epochTime + (7 days), "DefaultOS.sol: cannot incrementEpoch() before deadline");
+        epochTime = block.timestamp;
         currentEpoch++;
     }    
     

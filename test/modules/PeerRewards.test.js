@@ -14,7 +14,7 @@ describe("Peer Rewards Module", function () {
     
         this.DefaultOS = await ethers.getContractFactory("DefaultOS");
         this.DefaultTokenInstaller = await ethers.getContractFactory("def_TokenInstaller");
-        this.DefaultMembershipsInstaller = await ethers.getContractFactory("def_MembershipsInstaller");
+        this.DefaultMembershipsInstaller = await ethers.getContractFactory("def_MembersInstaller");
         this.DefaultMembershipsInstaller = await ethers.getContractFactory("def_PeerRewardsInstaller");
     })
 
