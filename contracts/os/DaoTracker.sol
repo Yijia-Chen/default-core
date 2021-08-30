@@ -6,10 +6,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "hardhat/console.sol";
 
 contract DaoTracker is Ownable {  
-  event DaoCreated(address indexed os, string indexed id, string name);
+  event DaoCreated(address os, string id);
 
   mapping(string => address) public daoMap;
-  mapping(string => bool) public daoActive;
   address[] private daoList;
 
   function getDao(string memory daoId) public view returns (address) {
@@ -17,9 +16,10 @@ contract DaoTracker is Ownable {
   }
 
   function setDao(string memory daoId, address os) public {
-    require(!daoActive[daoId]);
+    require(daoMap[daoId] == address(0), "DaoTracker | setDao(): Alias already taken");
     daoMap[daoId] = os;
-    daoActive[daoId] = true;
     daoList.push(daoMap[daoId]);
+
+    emit DaoCreated(os, daoId);
   }
 }
