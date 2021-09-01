@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "../DefaultOS.sol";
+import "../Epoch.sol";
 import "../Members/Members.sol";
 import "../Token/Token.sol";
 
@@ -23,10 +24,12 @@ contract def_PeerRewards is DefaultOSModule{
     // Module Configuration
     def_Token private _Token;
     def_Members private _Members;
+    def_Epoch private _Epoch;
 
     constructor(DefaultOS os_) DefaultOSModule(os_) {
         _Token = def_Token(_OS.getModule("TKN"));
         _Members = def_Members(_OS.getModule("MBR"));
+        _Epoch = def_Epoch(_OS.getModule("EPC"));
     }
 
 
@@ -128,7 +131,7 @@ contract def_PeerRewards is DefaultOSModule{
 
     function register() external {
         // get the current epoch for the OS
-        uint16 currentEpoch = _OS.currentEpoch();
+        uint16 currentEpoch = _Epoch.currentEpoch();
 
         // make sure member has at least enough endorsements to register for rewards in the upcoming epoch
         uint256 endorsementsReceived = _Members.totalEndorsementsReceived(msg.sender);
@@ -313,7 +316,7 @@ contract def_PeerRewards is DefaultOSModule{
 
     function commitAllocation() external {
         AllocationsList storage allocList = getAllocationsListFor[msg.sender];
-        uint16 currentEpoch = _OS.currentEpoch();
+        uint16 currentEpoch = _Epoch.currentEpoch();
 
         // ensure that the member has registered to participate in the current epoch
         require (pointsRegisteredForEpoch[currentEpoch][msg.sender] > 0, "def_PeerRewards | commitAllocation(): from member did not register for peer rewards this epoch");
@@ -363,7 +366,7 @@ contract def_PeerRewards is DefaultOSModule{
     // **********************************************************************
 
     function claimRewards() external {
-        uint16 currentEpoch = _OS.currentEpoch();
+        uint16 currentEpoch = _Epoch.currentEpoch();
 
         uint256 totalRewardsClaimed;
         

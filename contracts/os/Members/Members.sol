@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "../DefaultOS.sol";
+import "../Epoch.sol";
 import "../Members/_Staking.sol";
 import "../Token/Token.sol";
 import "hardhat/console.sol";
@@ -21,14 +22,16 @@ contract def_Members is Staking, DefaultOSModule {
 
     // Module Configuration
     def_Token private _Token;
+    def_Epoch private _Epoch;
 
     constructor(DefaultOS os_) DefaultOSModule(os_) {
-        _Token = def_Token(_OS.getModule("TKN"));
+      _Epoch = def_Epoch(_OS.getModule("EPC"));
+      _Token = def_Token(_OS.getModule("TKN"));
     }
     
 
     // Emitted events for this module
-    event MemberRegistered(address member, uint16 currentEpoch);
+    event MemberRegistered(address member, bytes32 alias_, uint16 currentEpoch);
     event TokensStaked(address member, uint256 amount, uint16 lockDuration, uint16 currentEpoch);
     event TokensUnstaked(address member, uint256 amount, uint16 lockDuration, uint16 currentEpoch);
     event EndorsementGiven(address fromMember, address toMember, uint256 endorsementsGiven, uint16 currentEpoch);
@@ -69,9 +72,9 @@ contract def_Members is Staking, DefaultOSModule {
         require (getMemberForAlias[alias_] == address(0), "def_Members | (): Members | setAlias(): alias is already taken");
         getAliasForMember[msg.sender] = alias_;
         getMemberForAlias[alias_] = msg.sender;
+
+        emit MemberRegistered(msg.sender, alias_, _Epoch.currentEpoch());
     }
-
-
 
     // **********************************************************************
     //                     MINT ENDORSEMENTS TO GIVE
@@ -81,7 +84,7 @@ contract def_Members is Staking, DefaultOSModule {
         require (tokensStaked_ > 0, "def_Members | (): def_Members | mintEndorsements() : member must stake more than 0 tokens");
         require (lockDuration_ >= 50, "def_Members | (): def_Members | mintEndorsements(): member must stake for at least 50 epochs");
         
-        uint16 expiryEpoch = _OS.currentEpoch() + lockDuration_;
+        uint16 expiryEpoch = _Epoch.currentEpoch() + lockDuration_;
 
         // get the adjusted amount of endorsements based on staking duration
         totalEndorsementsAvailableToGive[msg.sender] += tokensStaked_ * _getMultiplierForStakingDuration(lockDuration_);
@@ -90,7 +93,7 @@ contract def_Members is Staking, DefaultOSModule {
         _registerNewStake(expiryEpoch, lockDuration_, tokensStaked_);
         _Token.transferFrom(msg.sender, address(this), tokensStaked_);
 
-        emit TokensStaked(msg.sender, tokensStaked_, lockDuration_, _OS.currentEpoch());
+        emit TokensStaked(msg.sender, tokensStaked_, lockDuration_, _Epoch.currentEpoch());
     }
 
     // endorsement multipliers for staking, based on duration. Increase scale quadratically to incentivize long term holder
@@ -118,13 +121,13 @@ contract def_Members is Staking, DefaultOSModule {
         require (totalEndorsementsAvailableToGive[msg.sender] - amountStaked >= totalEndorsementsGiven[msg.sender], "def_Members | reclaimTokens(): Not enough endorsements remaining after unstaking");
 
         // The current Epoch should be higher than the expiry epoch
-        require (_OS.currentEpoch() >= expiryEpoch, "def_Members | reclaimTokens(): No expired stakes available for withdraw");
+        require (_Epoch.currentEpoch() >= expiryEpoch, "def_Members | reclaimTokens(): No expired stakes available for withdraw");
 
         // get the adjusted tokens to reclaim based on the lock duration and transfer the tokens back to the member
         totalEndorsementsAvailableToGive[msg.sender] -= amountStaked * _getMultiplierForStakingDuration(lockDuration);
         _Token.transfer(msg.sender, amountStaked);
 
-        emit TokensUnstaked(msg.sender, amountStaked, lockDuration, _OS.currentEpoch());
+        emit TokensUnstaked(msg.sender, amountStaked, lockDuration, _Epoch.currentEpoch());
     }
 
     
@@ -150,7 +153,7 @@ contract def_Members is Staking, DefaultOSModule {
         totalEndorsementsReceived[targetMember_] += endorsementsGiven_;
         endorsementsReceived[targetMember_][msg.sender] += endorsementsGiven_;
 
-        emit EndorsementGiven(msg.sender, targetMember_, endorsementsGiven_, _OS.currentEpoch());
+        emit EndorsementGiven(msg.sender, targetMember_, endorsementsGiven_, _Epoch.currentEpoch());
     }
 
 
@@ -172,6 +175,6 @@ contract def_Members is Staking, DefaultOSModule {
         endorsementsGiven[msg.sender][targetMember_] -= endorsementsWithdrawn_;
         endorsementsReceived[targetMember_][msg.sender ] -= endorsementsWithdrawn_;
 
-        emit EndorsementWithdrawn(msg.sender, targetMember_, endorsementsWithdrawn_, _OS.currentEpoch());
+        emit EndorsementWithdrawn(msg.sender, targetMember_, endorsementsWithdrawn_, _Epoch.currentEpoch());
     }
 }
