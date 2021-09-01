@@ -7,11 +7,12 @@ pragma solidity ^0.8.0;
 
 import "../DefaultOS.sol";
 import "../Token/Token.sol";
+import "../Epoch/Epoch.sol";
 import "./Treasury.sol";
 import "./_Vault.sol";
 
-contract def_MiningInstaller is DefaultOSModuleInstaller("MIN") {
-    string public moduleName = "Default Balance Sheet Mining";
+contract def_MiningInstaller is DefaultOSModuleInstaller("MNE") {
+    string public moduleName = "Default Treasury Mining";
 
     function install(DefaultOS os_) external override returns (address) {
         def_Mining Mining = new def_Mining(os_);
@@ -24,37 +25,39 @@ contract def_Mining is DefaultOSModule {
 
     // Module Configuration
     def_Token private _Token;
-    def_Treasury public _Treasury;
+    def_Epoch private _Epoch;
+    def_Treasury private _Treasury;
+    Vault private _vault;
+
 
     constructor(DefaultOS os_) DefaultOSModule(os_) {
         _Token = def_Token(_OS.getModule("TKN"));
+        _Epoch = def_Epoch(_OS.getModule("EPC"));
         _Treasury = def_Treasury(_OS.getModule("TSY"));
     }
 
     // emitted events
-    // event VaultOpened(Vault vault, uint16 epochOpened);
+    event RewardsIssued(uint16 currentEpoch, uint256 newRewardsPerShare);
 
 
-    mapping(address => uint256) nullRewards;
+    mapping(address => uint256) unclaimableRewards;
 
 
-    Vault private _vault;
     uint256 public accRewardsPerShare = 0;
-    uint256 public lastEpochAccumulated = 1;
-    uint256 public TOKEN_BONUS = 100; // governance configurable
+    uint256 public lastEpochIssued = 1;
     uint256 public constant EPOCH_MINING_REWARDS = 500000; 
     uint256 private constant MULT = 1e12;
 
 
-
     // **********************************************************************
-    //                  START THE TREASURY MINING PROGRAM
+    //                   GOVERNANCE CONTROLLED VARIABLES
     // **********************************************************************
 
-    // assign the vault contract for the program to "activate" it
-    function configureVault(Vault vault_) external onlyOwner {
-        require (address(_vault) == address(0), "def_Mining | configureVault(): can only configure vault once");
-        _vault = vault_;
+    // weekly rewards to the caller of the issueRewards() function
+    uint256 public TOKEN_BONUS = 5000; 
+
+    function setTokenBonus(uint256 newTokenBonus_) external onlyOS {
+        TOKEN_BONUS = newTokenBonus_;
     }
 
 
@@ -66,7 +69,7 @@ contract def_Mining is DefaultOSModule {
     // calculate the available rewards for the caller
     function pendingRewards() public view returns (uint256) {
         uint256 totalHistoricalRewards = _vault.balanceOf(msg.sender) * accRewardsPerShare;
-        uint256 finalDepositorRewards = (totalHistoricalRewards - nullRewards[msg.sender]) / MULT;
+        uint256 finalDepositorRewards = (totalHistoricalRewards - unclaimableRewards[msg.sender]) / MULT;
 
         // just in case somehow rounding error causes finalDepositorRewards to exceed the balance of the tokens in the contract
         if ( finalDepositorRewards > _Token.balanceOf(address(this)) ) {
@@ -76,48 +79,76 @@ contract def_Mining is DefaultOSModule {
         return finalDepositorRewards;
     }
 
+    
+    
+    // **********************************************************************
+    //                  START THE TREASURY MINING PROGRAM
+    // **********************************************************************
+
+    // assign the vault contract for the program to "activate" it
+    function assignVault(address token_) external onlyOwner {
+        Vault vault = _Treasury.getTreasuryVault(token_);
+        require (address(token_) == address(0), "can only assign vault once");
+        _vault = vault;
+    }
+
+
+
+    // **********************************************************************
+    //                 ISSUE EPOCH REWARDS TO SHAREHOLDERS
+    // **********************************************************************
+
     // Note: this design is not entirely ideal, because someone could manipulate the system by depositing/withdrawing right before
     // calling the accumulate rewards function. There might be some issues there, not entirely sure though how severe they are 
     // but intuition is telling me it is an okay trade off to make (for now).
+    function issueRewards() external {
 
-    function accumulateRewards() external {
-        require (lastEpochAccumulated != _OS.currentEpoch(), "def_Mining | accumulateRewrds(): rewards have already been accumulated for the current Epoch");
+        // issue only once per epoch
+        require (lastEpochIssued != _Epoch.current(), "Mining.sol: rewards have already been accumulated for the current Epoch");
+        require (address(_vault) != address(0), "Mining.sol: vault is not configured!");
 
-        // set the last epoch accumulated to the current epoch
-        lastEpochAccumulated = _OS.currentEpoch();
+        // record that rewards have been issued for the current epoch
+        lastEpochIssued = _Epoch.current();
+
+        // rewards per share for this epoch
+        uint256 newRewardsPerShare = EPOCH_MINING_REWARDS * MULT / _vault.totalSupply();
 
         // increment the accRewardsPerShare based on the total deposits at the time of calling this function
-        accRewardsPerShare += (EPOCH_MINING_REWARDS * MULT / _vault.totalSupply());         // test to make sure this cannot work for empty vault;
+        accRewardsPerShare += newRewardsPerShare;
 
         // mint the caller tokens for their service!
         _Token.mint(msg.sender, TOKEN_BONUS);
+
+        emit RewardsIssued(_Epoch.current(), newRewardsPerShare);
     }
 
-    function register(address depositor_) external {
-        nullRewards[msg.sender] = _vault.balanceOf(depositor_) * accRewardsPerShare;
+
+
+    // **********************************************************************
+    //                 RESET MINING REWARDS COUNTER FOR USER
+    // **********************************************************************
+
+    function register() external {
+        // reset the mining rewards for member to 0.
+        unclaimableRewards[msg.sender] = _vault.balanceOf(msg.sender) * accRewardsPerShare;
     }
 
 
-    function claimRewardsFor(address redeemer_) external {
-        uint rewards = pendingRewards();
-        nullRewards[msg.sender] = _vault.balanceOf(redeemer_) * accRewardsPerShare;
-        _Token.transfer(redeemer_, rewards);
-    }
 
-    // reset the amount of rewards accumulated so far by the the depositor's shares
-    function _resetClaimableRewards(address depositor_) internal {
-        nullRewards[msg.sender] = _vault.balanceOf(depositor_) * accRewardsPerShare;
-    }
+    // **********************************************************************
+    //                       CLAIM AVAILABLE REWARDS
+    // **********************************************************************
 
-    // update the amount of rewards accumulated by each incentivized share
-    function _distributeRewards(uint256 newRewards_) external {
-        require(_vault.totalSupply() > 0, "ClaimableRewards distributeRewards(): USDC Treasury Vault cannot be empty");
-        accRewardsPerShare += newRewards_ * MULT / _vault.totalSupply();
+    function claimRewards() external {
+        require (unclaimableRewards[msg.sender] != 0, "def_Mining | claimRewards(): Member is not registered for mining program");
+        
+        // save the pending rewards available to user
+        uint256 rewards = pendingRewards();
 
-        // @dev note:
-        // There will always be some precision issues due to rounding errors. In solidity, integer
-        // division always rounds towards zero, so 7.9 -> 7. This means that the rewards contract
-        // will always distribute ever slightly fewer shares than it receives, so it collects some dust
-        // over time.
+        // reset the mining rewards counter for member to 0.
+        unclaimableRewards[msg.sender] = _vault.balanceOf(msg.sender) * accRewardsPerShare;
+
+        // mint the pending rewards to the user
+        _Token.mint(msg.sender, rewards);
     }
 }

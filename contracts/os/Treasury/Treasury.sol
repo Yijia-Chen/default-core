@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "../DefaultOS.sol";
-import "../Epoch.sol";
+import "../Epoch/Epoch.sol";
 import "./_Vault.sol";
 
 contract def_TreasuryInstaller is DefaultOSModuleInstaller("TSY") {
@@ -30,14 +30,11 @@ contract def_Treasury is DefaultOSModule {
     event Deposited(Vault vault, address member, uint256 amount, uint16 epoch);
     event Withdrawn(Vault vault, address member, uint256 amount, uint16 epoch);
 
-    // a treasury vault
-    struct TreasuryVault {
-        uint8 fee;
-        Vault vault;
-    }
-
     // token contract => vault contract; ensures only one vault per token
-    mapping(address => TreasuryVault) public treasuryVaults;
+    mapping(address => Vault) public getVault;
+
+    // vault contract => fee charged for vault
+    mapping(address => uint8) public vaultFee;
 
     // **********************************************************************
     //                   OPEN NEW VAULT (GOVERNANCE ONLY)
@@ -47,12 +44,12 @@ contract def_Treasury is DefaultOSModule {
     function openVault(address token_, uint8 fee_) external onlyOS {
         // make sure no vault exists for this token
         require(
-            address(treasuryVaults[token_].vault) == address(0),
-            "def_Treasury | openVault(): vault already exists"
+            address(getVault[token_]) == address(0),
+            "vault already exists"
         );
         require(
             fee_ >= 0 && fee_ <= 100,
-            "defTreasury | openVault(): fee must be 0 <= fee <= 100"
+            "fee must be 0 <= fee <= 100"
         );
 
         // naming standard for the vault share tokens
@@ -74,10 +71,10 @@ contract def_Treasury is DefaultOSModule {
         );
 
         // save it to the registry
-        treasuryVaults[token_] = TreasuryVault(fee_, newVault);
+        getVault[token_] = newVault;
 
         // record event for frontend
-        emit VaultOpened(newVault, _Epoch.currentEpoch());
+        emit VaultOpened(newVault, _Epoch.current());
     }
 
     // **********************************************************************
@@ -85,25 +82,18 @@ contract def_Treasury is DefaultOSModule {
     // **********************************************************************
 
     // For the DAO/OS to withdraw earned fees from the vault
-    function withdrawFromVault(address token_, uint256 amountshares_)
+    function withdrawFromVault(Vault vault_, uint256 amountshares_)
         external
         onlyOS
     {
-        // find the treasury vault for the given token
-        TreasuryVault memory tsyVault = treasuryVaults[token_];
-        require(
-            address(tsyVault.vault) != address(0),
-            "def_Treasury | deposit(): vault does not exist for token"
-        );
-
         // withdraw from the vault to the OS
-        tsyVault.vault.withdraw(address(_OS), amountshares_);
+        vault_.withdraw(address(_OS), amountshares_);
 
         emit Deposited(
-            tsyVault.vault,
+            vault_,
             address(this),
             amountshares_,
-            _Epoch.currentEpoch()
+            _Epoch.current()
         );
     }
 
@@ -111,37 +101,29 @@ contract def_Treasury is DefaultOSModule {
     //                   CHANGE VAULT FEE (GOVERNANCE ONLY)
     // **********************************************************************
 
-    function changeFee(address token_, uint8 newFeePctg) external onlyOS {
+    function changeFee(Vault vault_, uint8 newFeePctg) external onlyOS {
         require(newFeePctg >= 0 && newFeePctg <= 100);
-        // get the treasury vault in storage for the token
-        TreasuryVault storage tsyVault = treasuryVaults[token_];
 
         // set the fee to the new fee
-        tsyVault.fee = newFeePctg;
+        vaultFee[address(vault_)] = newFeePctg;
 
-        emit VaultFeeChanged(tsyVault.vault, newFeePctg, _Epoch.currentEpoch());
+        emit VaultFeeChanged(vault_, newFeePctg, _Epoch.current());
     }
 
     // **********************************************************************
     //                   DEPOSIT USER FUNDS INTO VAULT
     // **********************************************************************
 
-    function deposit(address token_, uint256 amountTokens_) external {
-        // get the treasury vault in storage for the token
-        TreasuryVault memory tsyVault = treasuryVaults[token_];
-        require(
-            address(tsyVault.vault) != address(0),
-            "def_Treasury | deposit(): vault does not exist for token"
-        );
+    function deposit(Vault vault_, uint256 amountTokens_) external {
 
-        // deposit the users
-        tsyVault.vault.deposit(msg.sender, amountTokens_);
+        // deposit the users funds
+        vault_.deposit(msg.sender, amountTokens_);
 
         emit Deposited(
-            tsyVault.vault,
+            vault_,
             msg.sender,
             amountTokens_,
-            _Epoch.currentEpoch()
+            _Epoch.current()
         );
     }
 
@@ -149,32 +131,27 @@ contract def_Treasury is DefaultOSModule {
     //                   WITHDRAW USER FUNDS FROM VAULT
     // **********************************************************************
 
-    function withdraw(address token_, uint256 amountShares_) external {
-        TreasuryVault memory tsyVault = treasuryVaults[token_];
-        require(
-            address(tsyVault.vault) != address(0),
-            "def_Treasury | deposit(): vault does not exist for token"
-        );
+    function withdraw(Vault vault_, uint256 amountShares_) external {
 
         // calculate the fee collected upon withdraw and transfer shares to the wallet
-        uint256 withdrawFeeCollected = (amountShares_ * tsyVault.fee) / 100;
-        tsyVault.vault.transferFrom(
+        uint256 withdrawFeeCollected = (amountShares_ * vaultFee[address(vault_)]) / 100;
+        vault_.transferFrom(
             msg.sender,
             address(_OS),
             withdrawFeeCollected
         );
 
         // use subtraction to avoid rounding errors
-        uint256 amountWithdrawn = tsyVault.vault.withdraw(
+        uint256 amountWithdrawn = vault_.withdraw(
             msg.sender,
             amountShares_ - withdrawFeeCollected
         );
 
         emit Withdrawn(
-            tsyVault.vault,
+            vault_,
             msg.sender,
             amountWithdrawn,
-            _Epoch.currentEpoch()
+            _Epoch.current()
         );
     }
 }

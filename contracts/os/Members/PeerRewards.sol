@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "../DefaultOS.sol";
-import "../Epoch.sol";
+import "../Epoch/Epoch.sol";
 import "../Members/Members.sol";
 import "../Token/Token.sol";
 
@@ -81,7 +81,7 @@ contract def_PeerRewards is DefaultOSModule{
     mapping(uint16 => mapping(address => uint256)) public mintableRewards;
 
     // boolean flag for if rewards have been claimed by a member for a given epoch
-    mapping(uint16 => mapping(address => bool)) public claimedRewards;
+    mapping(address => uint16) public lastEpochClaimed;
 
 
 
@@ -131,13 +131,13 @@ contract def_PeerRewards is DefaultOSModule{
 
     function register() external {
         // get the current epoch for the OS
-        uint16 currentEpoch = _Epoch.currentEpoch();
+        uint16 currentEpoch = _Epoch.current();
 
         // make sure member has at least enough endorsements to register for rewards in the upcoming epoch
         uint256 endorsementsReceived = _Members.totalEndorsementsReceived(msg.sender);
         require (endorsementsReceived >= REWARDS_THRESHOLD, "def_PeerRewards | register(): not enough endorsements to participate!");
         
-        eligibleForRewards[currentEpoch + 1][msg.sender] = true;
+        eligibleForRewards[current + 1][msg.sender] = true;
 
         // used to calculate net allocation power for a member based on their participation streak
         uint256 adjustedScore;
@@ -147,7 +147,7 @@ contract def_PeerRewards is DefaultOSModule{
 
             // get the current participation streak for the member
             uint16 streak;
-            if (participationHistory[currentEpoch - 1][msg.sender] == true) {
+            if (participationHistory[current - 1][msg.sender] == true) {
                 streak = participationStreak[msg.sender] + 1;
             } else {
                 streak = 1;
@@ -162,12 +162,12 @@ contract def_PeerRewards is DefaultOSModule{
             }
 
             // record the adjusted score in the individual and total registrations for the upcoming epoch
-            pointsRegisteredForEpoch[currentEpoch + 1][msg.sender] += adjustedScore;
-            totalPointsRegisteredForEpoch[currentEpoch + 1] += adjustedScore;
+            pointsRegisteredForEpoch[current + 1][msg.sender] += adjustedScore;
+            totalPointsRegisteredForEpoch[current + 1] += adjustedScore;
 
         }
 
-        emit MemberRegistered(msg.sender, currentEpoch + 1, adjustedScore);
+        emit MemberRegistered(msg.sender, current + 1, adjustedScore);
     }
 
 
@@ -316,16 +316,16 @@ contract def_PeerRewards is DefaultOSModule{
 
     function commitAllocation() external {
         AllocationsList storage allocList = getAllocationsListFor[msg.sender];
-        uint16 currentEpoch = _Epoch.currentEpoch();
+        uint16 currentEpoch = _Epoch.current();
 
         // ensure that the member has registered to participate in the current epoch
-        require (pointsRegisteredForEpoch[currentEpoch][msg.sender] > 0, "def_PeerRewards | commitAllocation(): from member did not register for peer rewards this epoch");
+        require (pointsRegisteredForEpoch[current][msg.sender] > 0, "def_PeerRewards | commitAllocation(): from member did not register for peer rewards this epoch");
         
         // ensure that the member has received the minimum endorsements necessary to participate
         require (_Members.totalEndorsementsReceived(msg.sender) >= PARTICIPATION_THRESHOLD, "def_PeerRewards | commitAllocation(): from member does not enough endorsements received to participate");
 
         // ensure that the member has not already allocated for the current epoch
-        require (participationHistory[currentEpoch][msg.sender] == false, "def_PeerRewards | commitAllocation(): cannot participate more than once per epoch");
+        require (participationHistory[current][msg.sender] == false, "def_PeerRewards | commitAllocation(): cannot participate more than once per epoch");
 
         // ensure that the allocations comply with threshold boundaries
         uint16 highestAllocPctg = 100 * uint16(allocList.highestPts) / allocList.totalPts;
@@ -334,7 +334,7 @@ contract def_PeerRewards is DefaultOSModule{
         require (highestAllocPctg <= MAX_ALLOC_PCTG && lowestAllocPctg >= MIN_ALLOC_PCTG, "def_PeerRewards | commitAllocation(): allocations do not comply with threshold boundaries");
 
         // get the member's share of total allocations for the epoch]
-        uint256 totalRewardsToGive = CONTRIBUTOR_EPOCH_REWARDS * pointsRegisteredForEpoch[currentEpoch][msg.sender] / totalPointsRegisteredForEpoch[currentEpoch];
+        uint256 totalRewardsToGive = CONTRIBUTOR_EPOCH_REWARDS * pointsRegisteredForEpoch[current][msg.sender] / totalPointsRegisteredForEpoch[current];
 
         // starting from the end, loop through the allocation list and give allocations to each member
         AllocData memory curAlloc = allocList.allocData[allocList.TAIL];
@@ -342,21 +342,21 @@ contract def_PeerRewards is DefaultOSModule{
 
             // ensure that the allocated member has registered for this epoch and meets the minimum endorsements requirement
             require (_Members.totalEndorsementsReceived(curAlloc.to) >= REWARDS_THRESHOLD, "def_PeerRewards | commitAllocation(): to member does not have enough endorsements to receive allocation");
-            require (eligibleForRewards[currentEpoch][curAlloc.to], "def_PeerRewards | commitAllocation(): member did not register for rewards this epoch");
+            require (eligibleForRewards[current][curAlloc.to], "def_PeerRewards | commitAllocation(): member did not register for rewards this epoch");
 
             // increment the mintable rewards for the target member by their share of the member's total rewards to give
             uint256 finalRewardToMember = totalRewardsToGive * curAlloc.pts / allocList.totalPts;
-            mintableRewards[currentEpoch][curAlloc.to] += finalRewardToMember;
+            mintableRewards[current][curAlloc.to] += finalRewardToMember;
 
             // emit an event for each allocation
-            emit AllocationGiven(msg.sender, curAlloc.to, finalRewardToMember, currentEpoch);
+            emit AllocationGiven(msg.sender, curAlloc.to, finalRewardToMember, current);
 
             // get the next allocation in the list
             curAlloc = allocList.allocData[curAlloc.prev];
         }
 
-        // mark the member as participated in allocations for the currentEpoch
-        participationHistory[currentEpoch][msg.sender] = true;
+        // mark the member as participated in allocations for the current
+        participationHistory[current][msg.sender] = true;
     }
 
 
@@ -366,7 +366,7 @@ contract def_PeerRewards is DefaultOSModule{
     // **********************************************************************
 
     function claimRewards() external {
-        uint16 currentEpoch = _Epoch.currentEpoch();
+        uint16 currentEpoch = _Epoch.current();
 
         uint256 totalRewardsClaimed;
         
@@ -374,7 +374,7 @@ contract def_PeerRewards is DefaultOSModule{
         // unclaimed rewards that last more than 4 epochs are expired
         for (uint8 pastEpochs = 1; pastEpochs <= 4; pastEpochs ++ ) {
 
-            uint16 claimEpoch = currentEpoch - pastEpochs;
+            uint16 claimEpoch = current - pastEpochs;
             if (claimedRewards[claimEpoch][msg.sender] == false) {
                 totalRewardsClaimed += mintableRewards[claimEpoch][msg.sender];
 
@@ -388,6 +388,6 @@ contract def_PeerRewards is DefaultOSModule{
         // mint the appropriate amount of tokens to the member
         _Token.mint(msg.sender, totalRewardsClaimed);
 
-        emit RewardsClaimed(msg.sender, totalRewardsClaimed, currentEpoch);
+        emit RewardsClaimed(msg.sender, totalRewardsClaimed, current);
     }
 }

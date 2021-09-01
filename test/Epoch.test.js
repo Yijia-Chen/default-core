@@ -40,7 +40,7 @@ describe("DefaultOS.sol", function () {
         await ethers.provider.send('evm_mine');
 
         await this.epoch.incrementEpoch()
-        const newEpoch = await this.epoch.currentEpoch()
+        const newEpoch = await this.epoch.current()
 
         expect(newEpoch).to.equal(2);
       })
