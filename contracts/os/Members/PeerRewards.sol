@@ -137,7 +137,7 @@ contract def_PeerRewards is DefaultOSModule{
         uint256 endorsementsReceived = _Members.totalEndorsementsReceived(msg.sender);
         require (endorsementsReceived >= REWARDS_THRESHOLD, "def_PeerRewards | register(): not enough endorsements to participate!");
         
-        eligibleForRewards[current + 1][msg.sender] = true;
+        eligibleForRewards[currentEpoch + 1][msg.sender] = true;
 
         // used to calculate net allocation power for a member based on their participation streak
         uint256 adjustedScore;
@@ -147,7 +147,7 @@ contract def_PeerRewards is DefaultOSModule{
 
             // get the current participation streak for the member
             uint16 streak;
-            if (participationHistory[current - 1][msg.sender] == true) {
+            if (participationHistory[currentEpoch - 1][msg.sender] == true) {
                 streak = participationStreak[msg.sender] + 1;
             } else {
                 streak = 1;
@@ -162,12 +162,12 @@ contract def_PeerRewards is DefaultOSModule{
             }
 
             // record the adjusted score in the individual and total registrations for the upcoming epoch
-            pointsRegisteredForEpoch[current + 1][msg.sender] += adjustedScore;
-            totalPointsRegisteredForEpoch[current + 1] += adjustedScore;
+            pointsRegisteredForEpoch[currentEpoch + 1][msg.sender] += adjustedScore;
+            totalPointsRegisteredForEpoch[currentEpoch + 1] += adjustedScore;
 
         }
 
-        emit MemberRegistered(msg.sender, current + 1, adjustedScore);
+        emit MemberRegistered(msg.sender, currentEpoch + 1, adjustedScore);
     }
 
 
@@ -319,13 +319,13 @@ contract def_PeerRewards is DefaultOSModule{
         uint16 currentEpoch = _Epoch.current();
 
         // ensure that the member has registered to participate in the current epoch
-        require (pointsRegisteredForEpoch[current][msg.sender] > 0, "def_PeerRewards | commitAllocation(): from member did not register for peer rewards this epoch");
+        require (pointsRegisteredForEpoch[currentEpoch][msg.sender] > 0, "def_PeerRewards | commitAllocation(): from member did not register for peer rewards this epoch");
         
         // ensure that the member has received the minimum endorsements necessary to participate
         require (_Members.totalEndorsementsReceived(msg.sender) >= PARTICIPATION_THRESHOLD, "def_PeerRewards | commitAllocation(): from member does not enough endorsements received to participate");
 
         // ensure that the member has not already allocated for the current epoch
-        require (participationHistory[current][msg.sender] == false, "def_PeerRewards | commitAllocation(): cannot participate more than once per epoch");
+        require (participationHistory[currentEpoch][msg.sender] == false, "def_PeerRewards | commitAllocation(): cannot participate more than once per epoch");
 
         // ensure that the allocations comply with threshold boundaries
         uint16 highestAllocPctg = 100 * uint16(allocList.highestPts) / allocList.totalPts;
@@ -334,7 +334,7 @@ contract def_PeerRewards is DefaultOSModule{
         require (highestAllocPctg <= MAX_ALLOC_PCTG && lowestAllocPctg >= MIN_ALLOC_PCTG, "def_PeerRewards | commitAllocation(): allocations do not comply with threshold boundaries");
 
         // get the member's share of total allocations for the epoch]
-        uint256 totalRewardsToGive = CONTRIBUTOR_EPOCH_REWARDS * pointsRegisteredForEpoch[current][msg.sender] / totalPointsRegisteredForEpoch[current];
+        uint256 totalRewardsToGive = CONTRIBUTOR_EPOCH_REWARDS * pointsRegisteredForEpoch[currentEpoch][msg.sender] / totalPointsRegisteredForEpoch[currentEpoch];
 
         // starting from the end, loop through the allocation list and give allocations to each member
         AllocData memory curAlloc = allocList.allocData[allocList.TAIL];
@@ -342,52 +342,49 @@ contract def_PeerRewards is DefaultOSModule{
 
             // ensure that the allocated member has registered for this epoch and meets the minimum endorsements requirement
             require (_Members.totalEndorsementsReceived(curAlloc.to) >= REWARDS_THRESHOLD, "def_PeerRewards | commitAllocation(): to member does not have enough endorsements to receive allocation");
-            require (eligibleForRewards[current][curAlloc.to], "def_PeerRewards | commitAllocation(): member did not register for rewards this epoch");
+            require (eligibleForRewards[currentEpoch][curAlloc.to], "def_PeerRewards | commitAllocation(): member did not register for rewards this epoch");
 
             // increment the mintable rewards for the target member by their share of the member's total rewards to give
             uint256 finalRewardToMember = totalRewardsToGive * curAlloc.pts / allocList.totalPts;
-            mintableRewards[current][curAlloc.to] += finalRewardToMember;
+            mintableRewards[currentEpoch][curAlloc.to] += finalRewardToMember;
 
             // emit an event for each allocation
-            emit AllocationGiven(msg.sender, curAlloc.to, finalRewardToMember, current);
+            emit AllocationGiven(msg.sender, curAlloc.to, finalRewardToMember, currentEpoch);
 
             // get the next allocation in the list
             curAlloc = allocList.allocData[curAlloc.prev];
         }
 
         // mark the member as participated in allocations for the current
-        participationHistory[current][msg.sender] = true;
+        participationHistory[currentEpoch][msg.sender] = true;
     }
 
 
 
     // **********************************************************************
-    //                CLAIM PEER REWARDS FOR GIVEN EPOCH
+    //                   CLAIM ALL AVAILABLE PEER REWARDS
     // **********************************************************************
 
     function claimRewards() external {
         uint16 currentEpoch = _Epoch.current();
+        uint16 lastClaimed = lastEpochClaimed[msg.sender];
+        uint256 totalRewardsAcc = 0; // total rewards accrued
 
-        uint256 totalRewardsClaimed;
-        
-        // loop through the last 4 epochs to claim rewards
-        // unclaimed rewards that last more than 4 epochs are expired
-        for (uint8 pastEpochs = 1; pastEpochs <= 4; pastEpochs ++ ) {
+        // if last epoch claimed is the previous epoch, there is nothing new to claim
+        require (lastClaimed < currentEpoch - 1, "nothing available to claim");
 
-            uint16 claimEpoch = current - pastEpochs;
-            if (claimedRewards[claimEpoch][msg.sender] == false) {
-                totalRewardsClaimed += mintableRewards[claimEpoch][msg.sender];
-
-                // mark the epoch as claimed
-                claimedRewards[claimEpoch][msg.sender] = true;
-            }
+        // loop until most recent claimable epoch, start from the first unclaimed epoch
+        while (lastClaimed < currentEpoch - 1) {
+            lastClaimed++;
+            totalRewardsAcc += mintableRewards[lastClaimed][msg.sender];
         }
+        lastEpochClaimed[msg.sender] = lastClaimed;
 
-        require (totalRewardsClaimed > 0, "def_PeerRewards | claimRewards(): rewards claimed cannot be empty");
+        require (totalRewardsAcc > 0, "user must have rewards to claim");
 
         // mint the appropriate amount of tokens to the member
-        _Token.mint(msg.sender, totalRewardsClaimed);
+        _Token.mint(msg.sender, totalRewardsAcc);
 
-        emit RewardsClaimed(msg.sender, totalRewardsClaimed, current);
+        emit RewardsClaimed(msg.sender, totalRewardsAcc, currentEpoch);
     }
 }

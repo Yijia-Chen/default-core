@@ -87,9 +87,8 @@ contract def_Mining is DefaultOSModule {
 
     // assign the vault contract for the program to "activate" it
     function assignVault(address token_) external onlyOwner {
-        Vault vault = _Treasury.getTreasuryVault(token_);
-        require (address(token_) == address(0), "can only assign vault once");
-        _vault = vault;
+        require (address(_vault) == address(0), "can only assign vault once");
+        _vault = _Treasury.getVault(token_);
     }
 
 
