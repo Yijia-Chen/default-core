@@ -36,9 +36,8 @@ contract def_Epoch is DefaultOSModule {
     TOKEN_BONUS = newTokenBonus_;
   }
 
-
   function incrementEpoch() external {        
-    require(block.timestamp >= epochTime + (7 days), "def_Epoch | incrementEpoch(): cannot increment epoch before deadline");
+    require(block.timestamp >= epochTime + (7 days), "cannot increment epoch before deadline");
     epochTime = block.timestamp;
     current++;
 

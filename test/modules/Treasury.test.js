@@ -54,9 +54,9 @@ describe("Treasury", function () {
 
       await this.treasury.openVault(this.token.address, 50);
 
-      const tsyVault = await this.treasury.treasuryVaults(this.token.address);
-      expect(tsyVault.vault).not.to.equal(ZERO_ADDRESS);
-      this.vault = await ethers.getContractAt("Vault", tsyVault.vault);
+      const tsyVault = await this.treasury.getVault(this.token.address);
+      expect(tsyVault).not.to.equal(ZERO_ADDRESS);
+      this.vault = await ethers.getContractAt("Vault", tsyVault);
 
       expect(await this.vault.name()).to.equal("Default Treasury Vault: DEF");
       expect(await this.vault.symbol()).to.equal("DEF-VS");
@@ -72,11 +72,11 @@ describe("Treasury", function () {
 
     it("cannot open the same vault twice", async function () {
       await this.treasury.openVault(this.token.address, 50);
-      await expect(this.treasury.openVault(this.token.address, 50)).to.be.revertedWith("def_Treasury | openVault(): vault already exists")
+      await expect(this.treasury.openVault(this.token.address, 50)).to.be.revertedWith("vault already exists")
     })
 
     it("cannot exceed 0% or 100% fee", async function () {
-      await expect(this.treasury.openVault(this.token.address, 101)).to.be.revertedWith("defTreasury | openVault(): fee must be 0 <= fee <= 100");
+      await expect(this.treasury.openVault(this.token.address, 101)).to.be.revertedWith("fee must be 0 <= fee <= 100");
     })
   })
 
@@ -84,11 +84,11 @@ describe("Treasury", function () {
   it("deposits successfully", async function () {
     await this.treasury.openVault(this.token.address, 50);
 
-    const tsyVault = await this.treasury.treasuryVaults(this.token.address);
-    this.vault = await ethers.getContractAt("Vault", tsyVault.vault);
+    const tsyVault = await this.treasury.getVault(this.token.address);
+    this.vault = await ethers.getContractAt("Vault", tsyVault);
 
     await this.token.connect(this.userA).approve(this.vault.address, 40000);
-    await this.treasury.connect(this.userA).deposit(this.token.address, 40000);
+    await this.treasury.connect(this.userA).deposit(this.vault.address, 40000);
 
     expect(await this.token.balanceOf(this.userA.address)).to.equal(60000);
     expect(await this.token.balanceOf(this.vault.address)).to.equal(40000);
@@ -98,12 +98,12 @@ describe("Treasury", function () {
   it("withdraws successfully", async function () {
     await this.treasury.openVault(this.token.address, 50);
 
-    const tsyVault = await this.treasury.treasuryVaults(this.token.address);
-    this.vault = await ethers.getContractAt("Vault", tsyVault.vault);
+    const tsyVault = await this.treasury.getVault(this.token.address);
+    this.vault = await ethers.getContractAt("Vault", tsyVault);
 
     await this.token.connect(this.userA).approve(this.vault.address, 30000); // 60k tokens left
-    await this.treasury.connect(this.userA).deposit(this.token.address, 30000); // 30k tokens after deposit
-    await this.treasury.connect(this.userA).withdraw(this.token.address, 30000); // 45k tokens after 50% fee
+    await this.treasury.connect(this.userA).deposit(this.vault.address, 30000); // 30k tokens after deposit
+    await this.treasury.connect(this.userA).withdraw(this.vault.address, 30000); // 45k tokens after 50% fee
 
     expect(await this.token.balanceOf(this.userA.address)).to.equal(85000);
     expect(await this.token.balanceOf(this.vault.address)).to.equal(15000);
@@ -114,13 +114,13 @@ describe("Treasury", function () {
   it("OS withdraws for free", async function () {
     await this.treasury.openVault(this.token.address, 50);
 
-    const tsyVault = await this.treasury.treasuryVaults(this.token.address);
-    this.vault = await ethers.getContractAt("Vault", tsyVault.vault);
+    const tsyVault = await this.treasury.getVault(this.token.address);
+    this.vault = await ethers.getContractAt("Vault", tsyVault);
 
     await this.token.connect(this.userA).approve(this.vault.address, 20000); // 45k tokens left
-    await this.treasury.connect(this.userA).deposit(this.token.address, 20000); // 30k tokens after deposit
-    await this.treasury.connect(this.userA).withdraw(this.token.address, 20000); // 45k tokens after 50% fee
-    await this.treasury.withdrawFromVault(this.token.address, 10000);
+    await this.treasury.connect(this.userA).deposit(this.vault.address, 20000); // 30k tokens after deposit
+    await this.treasury.connect(this.userA).withdraw(this.vault.address, 20000); // 45k tokens after 50% fee
+    await this.treasury.withdrawFromVault(this.vault.address, 10000);
 
     expect(await this.token.balanceOf(this.userA.address)).to.equal(90000);
     expect(await this.token.balanceOf(this.default.address)).to.equal(10000);
@@ -131,14 +131,14 @@ describe("Treasury", function () {
   it("changes the fee", async function () {
     await this.treasury.openVault(this.token.address, 50);
 
-    const tsyVault = await this.treasury.treasuryVaults(this.token.address);
-    this.vault = await ethers.getContractAt("Vault", tsyVault.vault);
+    const tsyVault = await this.treasury.getVault(this.token.address);
+    this.vault = await ethers.getContractAt("Vault", tsyVault);
 
     await this.token.connect(this.userA).approve(this.vault.address, 20000); // 45k tokens left
-    await this.treasury.connect(this.userA).deposit(this.token.address, 20000); // 30k tokens after deposit
-    await this.treasury.changeFee(this.token.address, 75);
+    await this.treasury.connect(this.userA).deposit(this.vault.address, 20000); // 30k tokens after deposit
+    await this.treasury.changeFee(this.vault.address, 75);
 
-    await this.treasury.connect(this.userA).withdraw(this.token.address, 20000); // 45k tokens after 50% fee
+    await this.treasury.connect(this.userA).withdraw(this.vault.address, 20000); // 45k tokens after 50% fee
 
     expect(await this.token.balanceOf(this.userA.address)).to.equal(85000);
     expect(await this.token.balanceOf(this.default.address)).to.equal(00000);

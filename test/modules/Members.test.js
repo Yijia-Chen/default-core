@@ -13,6 +13,16 @@ async function incrementWeek() {
   await ethers.provider.send('evm_mine');
 }
 
+function makeHex(str, bytes) {
+  var strArray = [];
+	for (var n = 0, l = str.length; n < l; n ++) {
+		var hex = Number(str.charCodeAt(n)).toString(16);
+		strArray.push(hex);
+	}
+  return ethers.utils.hexZeroPad("0x" + strArray.join(''), bytes)
+}
+
+
 describe("Members Module", function () {
 
     before(async function () {
@@ -25,18 +35,18 @@ describe("Members Module", function () {
     
         this.DaoTracker = await ethers.getContractFactory("DaoTracker")
         this.DefaultOS = await ethers.getContractFactory("DefaultOS");
-        this.DefaultEpochInstaller = await ethers.getContractFactory("def_EpochInstaller");
         this.DefaultTokenInstaller = await ethers.getContractFactory("def_TokenInstaller");
+        this.DefaultEpochInstaller = await ethers.getContractFactory("def_EpochInstaller");        
         this.DefaultMembersInstaller = await ethers.getContractFactory("def_MembersInstaller");
+
+        this.tokenModule = await this.DefaultTokenInstaller.deploy();
+        await this.tokenModule.deployed();
 
         this.epochModule = await this.DefaultEpochInstaller.deploy();
         await this.epochModule.deployed();
 
         this.membersModule = await this.DefaultMembersInstaller.deploy();
-        await this.membersModule.deployed();
-
-        this.tokenModule = await this.DefaultTokenInstaller.deploy();
-        await this.tokenModule.deployed();
+        await this.membersModule.deployed();        
     })
 
     beforeEach(async function() {
@@ -46,11 +56,11 @@ describe("Members Module", function () {
         this.defaultOS = await this.DefaultOS.deploy("Default DAO", "default", this.daoTracker.address);
         this.default = await this.defaultOS.deployed();
 
-        await this.default.installModule(this.epochModule.address);
-        this.epoch = await ethers.getContractAt("def_Epoch", await this.default.getModule("0x455043")); // "EPC"
-
         await this.default.installModule(this.tokenModule.address);
         this.token = await ethers.getContractAt("def_Token", await this.default.getModule("0x544b4e")); // "TKN"
+
+        await this.default.installModule(this.epochModule.address);
+        this.epoch = await ethers.getContractAt("def_Epoch", await this.default.getModule("0x455043")); // "EPC"        
 
         await this.default.installModule(this.membersModule.address);
         this.members = await ethers.getContractAt("def_Members", await this.default.getModule("0x4d4252")); // "MBR"
@@ -59,10 +69,23 @@ describe("Members Module", function () {
         await this.token.connect(this.userA).approve(this.members.address, 100000);
     })
 
-    // it("alias()", async function() {
-    //     // ALIAS
-    //     expect(false).to.equal(true);
-    // })
+    describe("setAlias()", async function() {
+      it("Should set alias", async function() {  
+        const aliasInBytes = ethers.utils.formatBytes32String("sgc")        
+        await this.members.setAlias(aliasInBytes)
+        const alias = await this.members.getAliasForMember(this.dev.address)
+        expect(alias).to.equal(aliasInBytes)
+
+        await expect(this.members.setAlias(aliasInBytes)).to.be.revertedWith("alias is already taken")
+      })
+
+      it("Should emit registerMember event", async function() {       
+        const aliasInBytes = ethers.utils.formatBytes32String("sgc")   
+        await expect(this.members.setAlias(aliasInBytes))
+            .to.emit(this.members, "MemberRegistered")
+            .withArgs(this.dev.address, aliasInBytes, 1)
+      })
+    })
 
     describe("mintEndorsements()", async function () {
 

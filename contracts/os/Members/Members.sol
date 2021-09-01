@@ -69,7 +69,7 @@ contract def_Members is Staking, DefaultOSModule {
 
     function setAlias(bytes32 alias_) external {
         // make sure the alias space is empty 
-        require (getMemberForAlias[alias_] == address(0), "def_Members | (): Members | setAlias(): alias is already taken");
+        require (getMemberForAlias[alias_] == address(0), "alias is already taken");
         getAliasForMember[msg.sender] = alias_;
         getMemberForAlias[alias_] = msg.sender;
 

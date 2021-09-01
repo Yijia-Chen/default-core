@@ -10,6 +10,10 @@ describe("DefaultOS.sol", function () {
         this.daos = await this.DaoTracker.deployed()
         // console.log("D: ", this.daos.address)
 
+        this.DefaultTokenInstaller = await ethers.getContractFactory("def_TokenInstaller");
+        this.tokenModule = await this.DefaultTokenInstaller.deploy();
+        await this.tokenModule.deployed();
+
         this.DefaultOS = await (await ethers.getContractFactory("DefaultOS")).deploy(
           "Default DAO",
           "default",
@@ -22,6 +26,12 @@ describe("DefaultOS.sol", function () {
       this.EpochInstaller = await ethers.getContractFactory("def_EpochInstaller");
       this.epochModule = await this.EpochInstaller.deploy();
       await this.epochModule.deployed();
+
+      this.tokenModule = await this.DefaultTokenInstaller.deploy();
+      await this.tokenModule.deployed();
+
+      await this.default.installModule(this.tokenModule.address);
+      this.token = await ethers.getContractAt("def_Token", await this.default.getModule("0x544b4e")); // "TKN"
 
       await this.default.installModule(this.epochModule.address);
       this.epoch = await ethers.getContractAt("def_Epoch", await this.default.getModule("0x455043"));
@@ -56,7 +66,7 @@ describe("DefaultOS.sol", function () {
         await ethers.provider.send('evm_mine');
 
         // https://github.com/EthWorks/Waffle/issues/95
-        await expect(this.epoch.incrementEpoch()).to.be.revertedWith("Epoch.sol: cannot incrementEpoch() before deadline");
+        await expect(this.epoch.incrementEpoch()).to.be.revertedWith("cannot increment epoch before deadline");
       })
     })
 
