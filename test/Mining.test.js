@@ -38,18 +38,12 @@ describe("Mining.sol", function () {
         2. that the vault can only be configured once (can't change the vault)
       })
 
-      it("rejects premature increment epoch", async function() {
-        const sixDays = 6 * 24 * 60 * 60;        
+      it(issues rewards)
+      1. that the rewards can only be distributed once per epoch
+      2. that they are distributed correctly (correct calculations, incl potential rounding errors)
 
-        const blockNumBefore = await ethers.provider.getBlockNumber();
-        const blockBefore = await ethers.provider.getBlock(blockNumBefore);
-        const timestampBefore = blockBefore.timestamp;
-
-        await ethers.provider.send('evm_setNextBlockTimestamp', [timestampBefore + sixDays])
-        await ethers.provider.send('evm_mine');
-
-        // https://github.com/EthWorks/Waffle/issues/95
-        await expect(this.epoch.incrementEpoch()).to.be.revertedWith("Epoch.sol: cannot incrementEpoch() before deadline");
-      })
+      it (distributes rewards to users)
+      1. require users to be registered
+      2. claims the correct amount of rewards
     })
 })
