@@ -26,22 +26,22 @@ describe("Treasury", function () {
     this.treasuryModule = await this.DefaultTreasuryInstaller.deploy();
     await this.treasuryModule.deployed();
 
-    this.epochModule = await this.DefaultEpochInstaller.deploy();
-    await this.epochModule.deployed();
-
     this.tokenModule = await this.DefaultTokenInstaller.deploy();
     await this.tokenModule.deployed();
+
+    this.epochModule = await this.DefaultEpochInstaller.deploy();
+    await this.epochModule.deployed();
   })
 
   beforeEach(async function () {
+    await this.default.installModule(this.tokenModule.address);
+    this.token = await ethers.getContractAt("def_Token", await this.default.getModule("0x544b4e"));
+    
     await this.default.installModule(this.epochModule.address);
     this.epoch = await ethers.getContractAt("def_Epoch", await this.default.getModule("0x455043"));
 
     await this.default.installModule(this.treasuryModule.address);
     this.treasury = await ethers.getContractAt("def_Treasury", await this.default.getModule("0x545359"));
-
-    await this.default.installModule(this.tokenModule.address);
-    this.token = await ethers.getContractAt("def_Token", await this.default.getModule("0x544b4e"));
 
     await this.token.mint(this.userA.address, 100000);
     await this.token.mint(this.userB.address, 100000);
@@ -53,7 +53,6 @@ describe("Treasury", function () {
     it("opens a vault sccessfully", async function () {
 
       await this.treasury.openVault(this.token.address, 50);
-
       const tsyVault = await this.treasury.getVault(this.token.address);
       expect(tsyVault).not.to.equal(ZERO_ADDRESS);
       this.vault = await ethers.getContractAt("Vault", tsyVault);
@@ -63,7 +62,6 @@ describe("Treasury", function () {
       expect(await this.vault.decimals()).to.equal(3);
 
       // vault security:
-
       await expect(this.vault.deposit(this.userA.address, 0)).to.be.revertedWith("Ownable: caller is not the owner");
       await expect(this.vault.withdraw(this.userA.address, 0)).to.be.revertedWith("Ownable: caller is not the owner");
       await expect(this.vault.transfer(this.userA.address, 0)).to.be.revertedWith("Ownable: caller is not the owner");

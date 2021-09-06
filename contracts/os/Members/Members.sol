@@ -25,8 +25,8 @@ contract def_Members is Staking, DefaultOSModule {
     def_Epoch private _Epoch;
 
     constructor(DefaultOS os_) DefaultOSModule(os_) {
-      _Epoch = def_Epoch(_OS.getModule("EPC"));
       _Token = def_Token(_OS.getModule("TKN"));
+      _Epoch = def_Epoch(_OS.getModule("EPC"));      
     }
     
 
