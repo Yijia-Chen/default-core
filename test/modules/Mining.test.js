@@ -1,4 +1,4 @@
-const {incrementWeek} = require("../utils")
+const { incrementWeek } = require("../utils")
 const { expect } = require("chai");
 const MULT = 1e12
 
@@ -63,36 +63,36 @@ describe("Mining.sol", function () {
     this.vault = await ethers.getContractAt("Vault", tsyVault);
   })
 
-  describe("assignVault", async function () {    
-    it("allows only owner", async function() {      
-      const mining = await this.mining.connect(this.userA)      
+  describe("assignVault", async function () {
+    it("allows only owner", async function () {
+      const mining = await this.mining.connect(this.userA)
       await expect(mining.assignVault(this.lpToken.address)).to.be.revertedWith("only the os owner can make this call")
     })
 
-    it("does not allow being set more than once", async function() {
+    it("does not allow being set more than once", async function () {
       await this.mining.assignVault(this.lpToken.address)
       await expect(this.mining.assignVault(this.lpToken.address)).to.be.revertedWith("can only assign vault once")
     })
   })
 
   describe("setTokenBonus", async function () {
-    beforeEach(async function() {
+    beforeEach(async function () {
       await this.mining.assignVault(this.lpToken.address)
     })
 
-    it("successfully sets token bonus", async function() {
+    it("successfully sets token bonus", async function () {
       await this.mining.setTokenBonus(1)
       expect(await this.mining.TOKEN_BONUS()).to.equal(1)
     })
 
-    it("allows only owner", async function() {
-      const mining = await this.mining.connect(this.userA)      
+    it("allows only owner", async function () {
+      const mining = await this.mining.connect(this.userA)
       await expect(mining.setTokenBonus(1)).to.be.revertedWith("only the os owner can make this call")
     })
   })
 
   describe("issueRewards", async function () {
-    beforeEach(async function() {
+    beforeEach(async function () {
       await this.mining.assignVault(this.lpToken.address)
 
       await this.lpToken.mint(this.dev.address, 50000);
@@ -100,17 +100,17 @@ describe("Mining.sol", function () {
       await this.treasury.connect(this.dev).deposit(this.vault.address, 50000);
     })
 
-    it("successfully sets new accumulated rewards per share", async function() {      
+    it("successfully sets new accumulated rewards per share", async function () {
       await incrementWeek()
       await this.epoch.incrementEpoch()
       await this.mining.issueRewards()
 
       expect((await this.mining.accRewardsPerShare()).toNumber()).to.equal(10 * MULT)
-      
+
       await incrementWeek()
       await this.epoch.incrementEpoch()
       await this.mining.issueRewards()
-      
+
       expect((await this.mining.accRewardsPerShare()).toNumber()).to.equal(20 * MULT)
 
       await this.lpToken.mint(this.userA.address, 200000);
@@ -125,7 +125,7 @@ describe("Mining.sol", function () {
       expect((await this.mining.accRewardsPerShare()).toNumber()).to.equal((20 + 2) * MULT)
     })
 
-    it("successfully mints token bonus", async function() {            
+    it("successfully mints token bonus", async function () {
       await incrementWeek()
       await this.epoch.connect(this.userA).incrementEpoch()
       await this.mining.issueRewards()
@@ -133,7 +133,7 @@ describe("Mining.sol", function () {
       expect((await this.token.balanceOf(this.dev.address)).toNumber()).to.equal(5000)
     })
 
-    it("disallows duplicate issuance in the same epoch", async function() {
+    it("disallows duplicate issuance in the same epoch", async function () {
       await incrementWeek()
       await this.epoch.incrementEpoch()
       await this.mining.issueRewards()
@@ -141,7 +141,7 @@ describe("Mining.sol", function () {
       await expect(this.mining.issueRewards()).to.be.revertedWith("rewards have already been accumulated for the current epoch")
     })
 
-    it("emits event RewardsIssued", async function() {
+    it("emits event RewardsIssued", async function () {
       await incrementWeek()
       await this.epoch.incrementEpoch()
       await expect(this.mining.issueRewards())
@@ -151,8 +151,8 @@ describe("Mining.sol", function () {
   })
 
   describe("pendingRewards", async function () {
-    beforeEach(async function() {
-      await this.mining.assignVault(this.lpToken.address)      
+    beforeEach(async function () {
+      await this.mining.assignVault(this.lpToken.address)
 
       await this.lpToken.mint(this.dev.address, 50000);
       await this.lpToken.connect(this.dev).approve(this.vault.address, 50000);
@@ -161,11 +161,11 @@ describe("Mining.sol", function () {
       await this.mining.register()
     })
 
-    it("successfully calculates rewards", async function() {
+    it("successfully calculates rewards", async function () {
       const reward = (await this.mining.EPOCH_MINING_REWARDS()).toNumber()
 
-      expect((await this.mining.pendingRewards()).toNumber()).to.equal(0)      
-            
+      expect((await this.mining.pendingRewards()).toNumber()).to.equal(0)
+
       await incrementWeek()
       await this.epoch.incrementEpoch()
       await this.mining.issueRewards()
@@ -187,7 +187,7 @@ describe("Mining.sol", function () {
   })
 
   describe("claimRewards", async function () {
-    beforeEach(async function() {
+    beforeEach(async function () {
       await this.mining.assignVault(this.lpToken.address)
 
       await this.lpToken.mint(this.dev.address, 50000);
@@ -195,7 +195,7 @@ describe("Mining.sol", function () {
       await this.treasury.connect(this.dev).deposit(this.vault.address, 50000);
     })
 
-    it("successfully mints token to the user", async function() {
+    it("successfully mints token to the user", async function () {
       const reward = (await this.mining.EPOCH_MINING_REWARDS()).toNumber()
       await this.mining.register()
 
@@ -220,7 +220,7 @@ describe("Mining.sol", function () {
       )
     })
 
-    it("successfully resets unclaimable rewards", async function() {
+    it("successfully resets unclaimable rewards", async function () {
       const reward = (await this.mining.EPOCH_MINING_REWARDS()).toNumber()
       await this.mining.register()
 
@@ -241,14 +241,14 @@ describe("Mining.sol", function () {
       expect(await this.token.balanceOf(this.dev.address)).to.equal(reward)
     })
 
-    it("fails if not registered", async function() {      
+    it("fails if not registered", async function () {
       await incrementWeek()
       await this.epoch.incrementEpoch()
       await this.mining.issueRewards()
 
       await expect(this.mining.claimRewards()).to.be.revertedWith(
         "member is not registered for mining program"
-      )   
+      )
     })
   })
 })

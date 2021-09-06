@@ -2,18 +2,8 @@
 // testing could be a lot more robust. Good onboarding task to learn the algo.
 
 const { expect } = require("chai");
+const { incrementWeek } = require("../utils");
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
-
-async function incrementWeek() {
-  const sevenDays = 7 * 24 * 60 * 60;        
-
-  const blockNumBefore = await ethers.provider.getBlockNumber();
-  const blockBefore = await ethers.provider.getBlock(blockNumBefore);
-  const timestampBefore = blockBefore.timestamp;
-
-  await ethers.provider.send('evm_setNextBlockTimestamp', [timestampBefore + sevenDays])
-  await ethers.provider.send('evm_mine');
-}
 
 describe("Peer Rewards Module", async function () {
 

@@ -5,6 +5,7 @@ describe("DefaultOS.sol", function () {
   before(async function () {
     this.signers = await ethers.getSigners();
     this.dev = this.signers[0];
+    this.userA = this.signers[1];
     this.DaoTracker = await (await ethers.getContractFactory("DaoTracker")).deploy()
     this.daos = await this.DaoTracker.deployed()
     // console.log("D: ", this.daos.address)
@@ -36,11 +37,9 @@ describe("DefaultOS.sol", function () {
     this.epoch = await ethers.getContractAt("def_Epoch", await this.default.getModule("0x455043"));
   })
 
-  describe("Epoch", async function () {
+  describe("Epoch.sol", async function () {
 
     it("increments epoch correctly", async function () {
-      const sevenDays = 7 * 24 * 60 * 60;
-
       await incrementWeek()
 
       await this.epoch.incrementEpoch()
@@ -57,9 +56,29 @@ describe("DefaultOS.sol", function () {
       // https://github.com/EthWorks/Waffle/issues/95
       await expect(this.epoch.incrementEpoch()).to.be.revertedWith("cannot increment epoch before deadline");
     })
-  })
 
-  it("Mints tokens", async function() {
-    
-  })  
+    it("sets token bonus", async function() {      
+      const tokenBonus = 1
+
+      await this.epoch.setTokenBonus(tokenBonus)
+  
+      expect(await this.epoch.TOKEN_BONUS()).to.equal(tokenBonus)      
+    })  
+
+    it("only owner sets token bonus", async function() {      
+      await expect(this.epoch.connect(this.userA).setTokenBonus(1)).to.be.revertedWith(
+        "only the os owner can make this call"
+      )
+    })
+
+    it("mints token bonus", async function() {
+      await incrementWeek()
+  
+      await this.epoch.incrementEpoch()
+  
+      expect(await this.token.balanceOf(this.dev.address)).to.equal(
+        await this.epoch.TOKEN_BONUS()
+      )
+    })  
+  })
 })

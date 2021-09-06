@@ -41,7 +41,7 @@ contract def_Epoch is DefaultOSModule {
     epochTime = block.timestamp;
     current++;
 
-    _Token.mint(msg.sender, TOKEN_BONUS);    
+    _Token.mint(msg.sender, TOKEN_BONUS);
     emit EpochIncremented(current, epochTime);
   }
 }
