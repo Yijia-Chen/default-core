@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import "hardhat/console.sol";
 
-import "./DaoTracker.sol";
+import "./DefaultOSFactory.sol";
 
 abstract contract DefaultOSModuleInstaller is Ownable {
     bytes3 public moduleKeycode;
@@ -53,17 +53,22 @@ contract DefaultOS is Ownable {
     constructor(
         string memory organizationName_,
         string memory organizationId_,
-        DaoTracker daoTracker_
+        DefaultOSFactory factory_
     ) {
         organizationName = organizationName_;
-        daoTracker_.setDao(organizationId_, address(this));
+        factory_.setDao(organizationId_, address(this));
     }
+
+    event ModuleInstalled(bytes3 moduleKeycode, address OSAddress, address moduleAddress);
 
     function installModule(DefaultOSModuleInstaller installer_)
         external
         onlyOwner
     {
-        MODULES[installer_.moduleKeycode()] = installer_.install(this);
+        bytes3 moduleKeyCode = installer_.moduleKeycode();        
+        MODULES[moduleKeyCode] = installer_.install(this);
+
+        emit ModuleInstalled(moduleKeyCode, address(this), MODULES[moduleKeyCode]);
     }
 
     function getModule(bytes3 moduleKeycode_) external view returns (address) {

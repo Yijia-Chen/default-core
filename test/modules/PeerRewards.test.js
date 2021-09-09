@@ -16,7 +16,7 @@ describe("Peer Rewards Module", async function () {
     this.userD = this.signers[4];
     this.userE = this.signers[5];
 
-    this.DaoTracker = await ethers.getContractFactory("DaoTracker")
+    this.DefaultOSFactory = await ethers.getContractFactory("DefaultOSFactory")
     this.DefaultOS = await ethers.getContractFactory("DefaultOS");
     this.DefaultTokenInstaller = await ethers.getContractFactory("def_TokenInstaller");
     this.DefaultMembersInstaller = await ethers.getContractFactory("def_MembersInstaller");
@@ -26,10 +26,10 @@ describe("Peer Rewards Module", async function () {
     this.membersModule = await this.DefaultMembersInstaller.deploy();
     await this.membersModule.deployed();
 
-    this.daoTracker = await this.DaoTracker.deploy()
-    await this.daoTracker.deployed()
+    this.factory = await this.DefaultOSFactory.deploy()
+    await this.factory.deployed()
 
-    this.defaultOS = await this.DefaultOS.deploy("Default DAO", "default", this.daoTracker.address);
+    this.defaultOS = await this.DefaultOS.deploy("Default DAO", "default", this.factory.address);
     this.default = await this.defaultOS.deployed();
 
     this.tokenModule = await this.DefaultTokenInstaller.deploy();

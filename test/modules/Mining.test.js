@@ -14,8 +14,8 @@ describe("Mining.sol", function () {
     this.userC = this.signers[3];
     this.userD = this.signers[4];
 
-    this.DaoTracker = await (await ethers.getContractFactory("DaoTracker")).deploy()
-    this.daos = await this.DaoTracker.deployed()
+    this.DefaultOSFactory = await (await ethers.getContractFactory("DefaultOSFactory")).deploy()
+    this.daos = await this.DefaultOSFactory.deployed()
 
     this.DefaultOS = await (await ethers.getContractFactory("DefaultOS")).deploy(
       "Default DAO",

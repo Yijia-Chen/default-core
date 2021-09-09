@@ -40,6 +40,8 @@ contract def_Mining is DefaultOSModule {
 
     // emitted events
     event RewardsIssued(uint16 currentEpoch, uint256 newRewardsPerShare);
+    event RewardsClaimed(uint16 epochClaimed, address member, uint256 totalRewardsClaimed);
+    event Registered(uint16 currentEpoch, address member);
 
 
     mapping(address => uint256) unclaimableRewards;
@@ -139,6 +141,8 @@ contract def_Mining is DefaultOSModule {
         // reset the unclaimable rewards to the latest amount.
         unclaimableRewards[msg.sender] = _vault.balanceOf(msg.sender) * accRewardsPerShare;
         registered[msg.sender] = true;
+
+        emit Registered(_Epoch.current(), msg.sender);
     }
 
 
@@ -158,5 +162,7 @@ contract def_Mining is DefaultOSModule {
 
         // mint the pending rewards to the user
         _Token.mint(msg.sender, rewards);
+
+        emit RewardsClaimed(_Epoch.current(), msg.sender, rewards);
     }
 }

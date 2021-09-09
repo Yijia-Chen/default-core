@@ -31,11 +31,11 @@ contract def_Members is Staking, DefaultOSModule {
     
 
     // Emitted events for this module
-    event MemberRegistered(address member, bytes32 alias_, uint16 currentEpoch);
-    event TokensStaked(address member, uint256 amount, uint16 lockDuration, uint16 currentEpoch);
-    event TokensUnstaked(address member, uint256 amount, uint16 lockDuration, uint16 currentEpoch);
-    event EndorsementGiven(address fromMember, address toMember, uint256 endorsementsGiven, uint16 currentEpoch);
-    event EndorsementWithdrawn(address fromMember, address toMember, uint256 endorsementsWithdrawn, uint16 currentEpoch);
+    event MemberRegistered(address member, bytes32 alias_, uint16 epoch);
+    event TokensStaked(address member, uint256 amount, uint16 lockDuration, uint16 epoch);
+    event TokensUnstaked(address member, uint256 amount, uint16 lockDuration, uint16 epoch);
+    event EndorsementGiven(address fromMember, address toMember, uint256 endorsementsGiven, uint16 epoch);
+    event EndorsementWithdrawn(address fromMember, address toMember, uint256 endorsementsWithdrawn, uint16 epoch);
 
 
     // alias stuff

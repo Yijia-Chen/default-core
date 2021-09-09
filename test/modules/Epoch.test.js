@@ -6,8 +6,8 @@ describe("DefaultOS.sol", function () {
     this.signers = await ethers.getSigners();
     this.dev = this.signers[0];
     this.userA = this.signers[1];
-    this.DaoTracker = await (await ethers.getContractFactory("DaoTracker")).deploy()
-    this.daos = await this.DaoTracker.deployed()
+    this.factory = await (await ethers.getContractFactory("DefaultOSFactory")).deploy()
+    this.daos = await this.factory.deployed()
     // console.log("D: ", this.daos.address)
 
     this.DefaultTokenInstaller = await ethers.getContractFactory("def_TokenInstaller");

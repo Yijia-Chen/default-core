@@ -11,16 +11,16 @@ describe("Treasury", function () {
     this.userC = this.signers[3];
     this.userD = this.signers[4];
 
-    this.DaoTracker = await ethers.getContractFactory("DaoTracker")
+    this.DefaultOSFactory = await ethers.getContractFactory("DefaultOSFactory")
     this.DefaultOS = await ethers.getContractFactory("DefaultOS");
     this.DefaultTokenInstaller = await ethers.getContractFactory("def_TokenInstaller");
     this.DefaultEpochInstaller = await ethers.getContractFactory("def_EpochInstaller");
     this.DefaultTreasuryInstaller = await ethers.getContractFactory("def_TreasuryInstaller");
 
-    this.daoTracker = await this.DaoTracker.deploy()
-    await this.daoTracker.deployed()
+    this.factory = await this.DefaultOSFactory.deploy()
+    await this.factory.deployed()
 
-    this.defaultOS = await this.DefaultOS.deploy("Default DAO", "default", this.daoTracker.address);
+    this.defaultOS = await this.DefaultOS.deploy("Default DAO", "default", this.factory.address);
     this.default = await this.defaultOS.deployed();
 
     this.treasuryModule = await this.DefaultTreasuryInstaller.deploy();

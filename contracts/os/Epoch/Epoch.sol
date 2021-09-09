@@ -26,14 +26,14 @@ contract def_Epoch is DefaultOSModule {
   }
 
   // emitted events
-  event EpochIncremented(uint16 currentEpoch, uint256 epochTime);
+  event EpochIncremented(uint16 epoch, uint256 epochTime);  
 
   uint16 public current = 1;
   uint256 public epochTime = block.timestamp;
   uint256 public TOKEN_BONUS = 5000;
 
   function setTokenBonus(uint256 newTokenBonus_) external onlyOS {
-    TOKEN_BONUS = newTokenBonus_;
+    TOKEN_BONUS = newTokenBonus_;    
   }
 
   function incrementEpoch() external {        
