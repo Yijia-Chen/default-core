@@ -38,6 +38,7 @@ contract def_Mining is DefaultOSModule {
         _Treasury = def_Treasury(_OS.getModule("TSY"));
     }
 
+
     // emitted events
     event RewardsIssued(uint16 currentEpoch, uint256 newRewardsPerShare);
     event RewardsClaimed(uint16 epochClaimed, address member, uint256 totalRewardsClaimed);
@@ -75,19 +76,6 @@ contract def_Mining is DefaultOSModule {
     function pendingRewards() public view returns (uint256) {
         uint256 totalHistoricalRewards = _vault.balanceOf(msg.sender) * accRewardsPerShare;                
         uint256 finalDepositorRewards = (totalHistoricalRewards - unclaimableRewards[msg.sender]) / MULT;
-        
-        // console.log(_vault.balanceOf(msg.sender));
-        // console.log(accRewardsPerShare);
-        // console.log(totalHistoricalRewards);
-        // console.log(unclaimableRewards[msg.sender]);
-        // console.log(address(this));
-        // console.log(_Token.balanceOf(address(this)));
-        // console.log(finalDepositorRewards);
-
-        // just in case somehow rounding error causes finalDepositorRewards to exceed the balance of the tokens in the contract
-        if ( finalDepositorRewards > _Token.balanceOf(address(this)) ) {
-             finalDepositorRewards = _Token.balanceOf(address(this));
-        }        
 
         return finalDepositorRewards;
     }
@@ -103,6 +91,8 @@ contract def_Mining is DefaultOSModule {
         require (address(_vault) == address(0), "can only assign vault once");        
         _vault = _Treasury.getVault(token_);
     }
+
+
 
     // **********************************************************************
     //                 ISSUE EPOCH REWARDS TO SHAREHOLDERS
@@ -127,11 +117,12 @@ contract def_Mining is DefaultOSModule {
         accRewardsPerShare += newRewardsPerShare;        
         // mint the caller tokens for their service!
 
-        _Token.mint(address(this), EPOCH_MINING_REWARDS);
         _Token.mint(msg.sender, TOKEN_BONUS);
 
         emit RewardsIssued(_Epoch.current(), newRewardsPerShare);
     }
+
+
 
     // **********************************************************************
     //                 RESET MINING REWARDS COUNTER FOR USER

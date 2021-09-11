@@ -1,6 +1,6 @@
-const { incrementWeek } = require("../utils")
+const { incrementWeek } = require("../utils");
 const { expect } = require("chai");
-const MULT = 1e12
+const MULT = 1e12;
 
 // dao: launch os, install token, epoch, treasury, mining. Call configure() on mining after deploy.
 // user: get tokens, deposit into treasury to get shares. Call register() on mining after they get shares to start the program.
@@ -164,13 +164,9 @@ describe("Mining.sol", function () {
     it("successfully calculates rewards", async function () {
       const reward = (await this.mining.EPOCH_MINING_REWARDS()).toNumber()
 
-      expect((await this.mining.pendingRewards()).toNumber()).to.equal(0)
-
       await incrementWeek()
       await this.epoch.incrementEpoch()
       await this.mining.issueRewards()
-
-      expect((await this.mining.pendingRewards()).toNumber()).to.equal(reward)
 
       await this.lpToken.mint(this.userA.address, 150000);
       await this.lpToken.connect(this.userA).approve(this.vault.address, 150000);
