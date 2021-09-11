@@ -70,8 +70,9 @@ contract def_Treasury is DefaultOSModule {
             vaultDecimals
         );
 
-        // save it to the registry
+        // save it to the registry        
         getVault[token_] = newVault;
+        vaultFee[address(newVault)] = fee_;
 
         // record event for frontend
         emit VaultOpened(newVault, _Epoch.current());
@@ -131,8 +132,7 @@ contract def_Treasury is DefaultOSModule {
     //                   WITHDRAW USER FUNDS FROM VAULT
     // **********************************************************************
 
-    function withdraw(Vault vault_, uint256 amountShares_) external {
-
+    function withdraw(Vault vault_, uint256 amountShares_) external {        
         // calculate the fee collected upon withdraw and transfer shares to the wallet
         uint256 withdrawFeeCollected = (amountShares_ * vaultFee[address(vault_)]) / 100;
         vault_.transferFrom(

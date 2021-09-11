@@ -25,17 +25,17 @@ contract def_Members is Staking, DefaultOSModule {
     def_Epoch private _Epoch;
 
     constructor(DefaultOS os_) DefaultOSModule(os_) {
-      _Epoch = def_Epoch(_OS.getModule("EPC"));
       _Token = def_Token(_OS.getModule("TKN"));
+      _Epoch = def_Epoch(_OS.getModule("EPC"));      
     }
     
 
     // Emitted events for this module
-    event MemberRegistered(address member, bytes32 alias_, uint16 currentEpoch);
-    event TokensStaked(address member, uint256 amount, uint16 lockDuration, uint16 currentEpoch);
-    event TokensUnstaked(address member, uint256 amount, uint16 lockDuration, uint16 currentEpoch);
-    event EndorsementGiven(address fromMember, address toMember, uint256 endorsementsGiven, uint16 currentEpoch);
-    event EndorsementWithdrawn(address fromMember, address toMember, uint256 endorsementsWithdrawn, uint16 currentEpoch);
+    event MemberRegistered(address member, bytes32 alias_, uint16 epoch);
+    event TokensStaked(address member, uint256 amount, uint16 lockDuration, uint16 epoch);
+    event TokensUnstaked(address member, uint256 amount, uint16 lockDuration, uint16 epoch);
+    event EndorsementGiven(address fromMember, address toMember, uint256 endorsementsGiven, uint16 epoch);
+    event EndorsementWithdrawn(address fromMember, address toMember, uint256 endorsementsWithdrawn, uint16 epoch);
 
 
     // alias stuff
@@ -69,7 +69,7 @@ contract def_Members is Staking, DefaultOSModule {
 
     function setAlias(bytes32 alias_) external {
         // make sure the alias space is empty 
-        require (getMemberForAlias[alias_] == address(0), "def_Members | (): Members | setAlias(): alias is already taken");
+        require (getMemberForAlias[alias_] == address(0), "alias is already taken");
         getAliasForMember[msg.sender] = alias_;
         getMemberForAlias[alias_] = msg.sender;
 
