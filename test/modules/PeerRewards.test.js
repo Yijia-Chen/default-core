@@ -112,11 +112,11 @@ describe("Peer Rewards Module", async function () {
 
       await expect(this.rewards.connect(this.userB).register())
         .to.emit(this.rewards, "MemberRegistered")
-        .withArgs(this.userB.address, 2, 0)
+        .withArgs(this.default.address, this.userB.address, 2, 0)
 
       await expect(this.rewards.connect(this.userC).register())
         .to.emit(this.rewards, "MemberRegistered")
-        .withArgs(this.userC.address, 2, 0)
+        .withArgs(this.default.address, this.userC.address, 2, 0)
 
       expect(await this.rewards.pointsRegisteredForEpoch(2, this.userB.address)).to.equal(0);
       expect(await this.rewards.pointsRegisteredForEpoch(2, this.userC.address)).to.equal(0);
@@ -129,7 +129,7 @@ describe("Peer Rewards Module", async function () {
     it("registers members to receive and give rewards if they qualify", async function () {
       await expect(this.rewards.connect(this.userA).register())
         .to.emit(this.rewards, "MemberRegistered")
-        .withArgs(this.userA.address, 2, 90000);
+        .withArgs(this.default.address, this.userA.address, 2, 90000);
 
       expect(await this.rewards.pointsRegisteredForEpoch(2, this.userA.address)).to.equal(90000); // 10% because of streak
       expect(await this.rewards.totalPointsRegisteredForEpoch(2)).to.equal(90000);
@@ -401,7 +401,7 @@ describe("Peer Rewards Module", async function () {
 
       await expect(this.rewards.connect(this.userB).claimRewards())
         .to.emit(this.rewards, "RewardsClaimed")
-        .withArgs(this.userB.address, 50000, 8);
+        .withArgs(this.default.address, this.userB.address, 50000, 8);
 
       expect(await this.rewards.lastEpochClaimed(this.userB.address)).to.equal(
         await this.epoch.current() - 1
@@ -463,7 +463,7 @@ describe("Peer Rewards Module", async function () {
 
       await expect(this.rewards.connect(this.userB).claimRewards())
         .to.emit(this.rewards, "RewardsClaimed")
-        .withArgs(this.userB.address, 150000, 13);
+        .withArgs(this.default.address, this.userB.address, 150000, 13);
 
       expect(await this.token.balanceOf(this.userB.address)).to.equal(200000);
 

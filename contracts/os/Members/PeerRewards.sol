@@ -34,10 +34,10 @@ contract def_PeerRewards is DefaultOSModule{
 
 
     // Emitted events for this module
-    event MemberRegistered(address member, uint16 epochRegisteredFor, uint256 ptsRegistered);
-    event AllocationSet(address fromMember, address toMember, uint8 allocPts);
-    event AllocationGiven(address fromMember, address toMember, uint256 allocGiven, uint16 currentEpoch);
-    event RewardsClaimed(address member, uint256 totalRewardsClaimed, uint16 epochClaimed);
+    event MemberRegistered(address os, address member, uint16 epochRegisteredFor, uint256 ptsRegistered);
+    event AllocationSet(address os, address fromMember, address toMember, uint8 allocPts);
+    event AllocationGiven(address os, address fromMember, address toMember, uint256 allocGiven, uint16 currentEpoch);
+    event RewardsClaimed(address os, address member, uint256 totalRewardsClaimed, uint16 epochClaimed);
 
 
     // persistent allocation data for a particular member
@@ -167,7 +167,7 @@ contract def_PeerRewards is DefaultOSModule{
 
         }
 
-        emit MemberRegistered(msg.sender, currentEpoch + 1, adjustedScore);
+        emit MemberRegistered(address(_OS), msg.sender, currentEpoch + 1, adjustedScore);
     }
 
 
@@ -200,7 +200,7 @@ contract def_PeerRewards is DefaultOSModule{
             }
         }
 
-        emit AllocationSet(msg.sender, toMember_, newAllocPts_);
+        emit AllocationSet(address(_OS), msg.sender, toMember_, newAllocPts_);
     }
 
     // add a new allocation to the list
@@ -349,7 +349,7 @@ contract def_PeerRewards is DefaultOSModule{
             mintableRewards[currentEpoch][curAlloc.to] += finalRewardToMember;
 
             // emit an event for each allocation
-            emit AllocationGiven(msg.sender, curAlloc.to, finalRewardToMember, currentEpoch);
+            emit AllocationGiven(address(_OS), msg.sender, curAlloc.to, finalRewardToMember, currentEpoch);
 
             // get the next allocation in the list
             curAlloc = allocList.allocData[curAlloc.prev];
@@ -385,6 +385,6 @@ contract def_PeerRewards is DefaultOSModule{
         // mint the appropriate amount of tokens to the member
         _Token.mint(msg.sender, totalRewardsAcc);
 
-        emit RewardsClaimed(msg.sender, totalRewardsAcc, currentEpoch);
+        emit RewardsClaimed(address(_OS), msg.sender, totalRewardsAcc, currentEpoch);
     }
 }

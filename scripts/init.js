@@ -53,7 +53,7 @@ async function main() {
   await defaultPeerRewardsInstaller.deployed();
   console.log("[CONTRACT DEPLOYED] DefaultMembersInstaller: ", defaultPeerRewardsInstaller.address);
 
-  await defaultOSFactory.setDao(defaultOS.address)
+  await defaultOSFactory.setOS(defaultOS.address)
   await defaultOS.installModule(defaultTokenInstaller.address);
   await defaultOS.installModule(defaultEpochInstaller.address);
   await defaultOS.installModule(defaultTreasuryInstaller.address);

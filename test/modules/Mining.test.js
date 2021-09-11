@@ -146,7 +146,7 @@ describe("Mining.sol", function () {
       await this.epoch.incrementEpoch()
       await expect(this.mining.issueRewards())
         .to.emit(this.mining, "RewardsIssued")
-        .withArgs(await this.epoch.current(), 10 * MULT);
+        .withArgs(this.default.address, this.dev.address, await this.epoch.current(), 10 * MULT);
     })
   })
 

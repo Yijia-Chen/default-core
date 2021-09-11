@@ -25,10 +25,10 @@ contract def_Treasury is DefaultOSModule {
     }
 
     // emitted events
-    event VaultOpened(Vault vault, uint16 epochOpened);
-    event VaultFeeChanged(Vault vault, uint8 newFee, uint16 epochOpened);
-    event Deposited(Vault vault, address member, uint256 amount, uint16 epoch);
-    event Withdrawn(Vault vault, address member, uint256 amount, uint16 epoch);
+    event VaultOpened(address os, Vault vault, uint16 epochOpened);
+    event VaultFeeChanged(address os, Vault vault, uint8 newFee, uint16 epochOpened);
+    event Deposited(address os, Vault vault, address member, uint256 amount, uint16 epoch);
+    event Withdrawn(address os, Vault vault, address member, uint256 amount, uint16 epoch);
 
     // token contract => vault contract; ensures only one vault per token
     mapping(address => Vault) public getVault;
@@ -75,7 +75,7 @@ contract def_Treasury is DefaultOSModule {
         vaultFee[address(newVault)] = fee_;
 
         // record event for frontend
-        emit VaultOpened(newVault, _Epoch.current());
+        emit VaultOpened(address(_OS), newVault, _Epoch.current());
     }
 
     // **********************************************************************
@@ -91,6 +91,7 @@ contract def_Treasury is DefaultOSModule {
         vault_.withdraw(address(_OS), amountshares_);
 
         emit Deposited(
+            address(_OS), 
             vault_,
             address(this),
             amountshares_,
@@ -108,7 +109,7 @@ contract def_Treasury is DefaultOSModule {
         // set the fee to the new fee
         vaultFee[address(vault_)] = newFeePctg;
 
-        emit VaultFeeChanged(vault_, newFeePctg, _Epoch.current());
+        emit VaultFeeChanged(address(_OS), vault_, newFeePctg, _Epoch.current());
     }
 
     // **********************************************************************
@@ -121,6 +122,7 @@ contract def_Treasury is DefaultOSModule {
         vault_.deposit(msg.sender, amountTokens_);
 
         emit Deposited(
+            address(_OS), 
             vault_,
             msg.sender,
             amountTokens_,
@@ -148,6 +150,7 @@ contract def_Treasury is DefaultOSModule {
         );
 
         emit Withdrawn(
+            address(_OS), 
             vault_,
             msg.sender,
             amountWithdrawn,

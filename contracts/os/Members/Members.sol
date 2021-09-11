@@ -31,11 +31,11 @@ contract def_Members is Staking, DefaultOSModule {
     
 
     // Emitted events for this module
-    event MemberRegistered(address member, bytes32 alias_, uint16 epoch);
-    event TokensStaked(address member, uint256 amount, uint16 lockDuration, uint16 epoch);
-    event TokensUnstaked(address member, uint256 amount, uint16 lockDuration, uint16 epoch);
-    event EndorsementGiven(address fromMember, address toMember, uint256 endorsementsGiven, uint16 epoch);
-    event EndorsementWithdrawn(address fromMember, address toMember, uint256 endorsementsWithdrawn, uint16 epoch);
+    event MemberRegistered(address os, address member, bytes32 alias_, uint16 epoch);
+    event TokensStaked(address os, address member, uint256 amount, uint16 lockDuration, uint16 epoch);
+    event TokensUnstaked(address os, address member, uint256 amount, uint16 lockDuration, uint16 epoch);
+    event EndorsementGiven(address os, address fromMember, address toMember, uint256 endorsementsGiven, uint16 epoch);
+    event EndorsementWithdrawn(address os, address fromMember, address toMember, uint256 endorsementsWithdrawn, uint16 epoch);
 
 
     // alias stuff
@@ -73,7 +73,7 @@ contract def_Members is Staking, DefaultOSModule {
         getAliasForMember[msg.sender] = alias_;
         getMemberForAlias[alias_] = msg.sender;
 
-        emit MemberRegistered(msg.sender, alias_, _Epoch.current());
+        emit MemberRegistered(address(_OS), msg.sender, alias_, _Epoch.current());
     }
 
     // **********************************************************************
@@ -93,7 +93,7 @@ contract def_Members is Staking, DefaultOSModule {
         _registerNewStake(expiryEpoch, lockDuration_, tokensStaked_);
         _Token.transferFrom(msg.sender, address(this), tokensStaked_);
 
-        emit TokensStaked(msg.sender, tokensStaked_, lockDuration_, _Epoch.current());
+        emit TokensStaked(address(_OS), msg.sender, tokensStaked_, lockDuration_, _Epoch.current());
     }
 
     // endorsement multipliers for staking, based on duration. Increase scale quadratically to incentivize long term holder
@@ -127,7 +127,7 @@ contract def_Members is Staking, DefaultOSModule {
         totalEndorsementsAvailableToGive[msg.sender] -= amountStaked * _getMultiplierForStakingDuration(lockDuration);
         _Token.transfer(msg.sender, amountStaked);
 
-        emit TokensUnstaked(msg.sender, amountStaked, lockDuration, _Epoch.current());
+        emit TokensUnstaked(address(_OS), msg.sender, amountStaked, lockDuration, _Epoch.current());
     }
 
     
@@ -153,7 +153,7 @@ contract def_Members is Staking, DefaultOSModule {
         totalEndorsementsReceived[targetMember_] += endorsementsGiven_;
         endorsementsReceived[targetMember_][msg.sender] += endorsementsGiven_;
 
-        emit EndorsementGiven(msg.sender, targetMember_, endorsementsGiven_, _Epoch.current());
+        emit EndorsementGiven(address(_OS), msg.sender, targetMember_, endorsementsGiven_, _Epoch.current());
     }
 
 
@@ -175,6 +175,6 @@ contract def_Members is Staking, DefaultOSModule {
         endorsementsGiven[msg.sender][targetMember_] -= endorsementsWithdrawn_;
         endorsementsReceived[targetMember_][msg.sender ] -= endorsementsWithdrawn_;
 
-        emit EndorsementWithdrawn(msg.sender, targetMember_, endorsementsWithdrawn_, _Epoch.current());
+        emit EndorsementWithdrawn(address(_OS), msg.sender, targetMember_, endorsementsWithdrawn_, _Epoch.current());
     }
 }

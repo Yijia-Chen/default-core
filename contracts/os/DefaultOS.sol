@@ -56,10 +56,10 @@ contract DefaultOS is Ownable {
         DefaultOSFactory factory_
     ) {
         organizationName = organizationName_;
-        factory_.setDao(organizationId_, address(this));
+        factory_.createOS(address(this), organizationId_, organizationName_);
     }
 
-    event ModuleInstalled(bytes3 moduleKeycode, address OSAddress, address moduleAddress);
+    event ModuleInstalled(address os, address module, bytes3 moduleKeycode);
 
     function installModule(DefaultOSModuleInstaller installer_)
         external
@@ -68,7 +68,7 @@ contract DefaultOS is Ownable {
         bytes3 moduleKeyCode = installer_.moduleKeycode();        
         MODULES[moduleKeyCode] = installer_.install(this);
 
-        emit ModuleInstalled(moduleKeyCode, address(this), MODULES[moduleKeyCode]);
+        emit ModuleInstalled(address(this), MODULES[moduleKeyCode], moduleKeyCode);
     }
 
     function getModule(bytes3 moduleKeycode_) external view returns (address) {
