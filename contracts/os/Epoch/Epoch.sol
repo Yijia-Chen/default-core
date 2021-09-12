@@ -28,7 +28,8 @@ contract def_Epoch is DefaultOSModule {
         address os,
         address member,
         uint16 epoch,
-        uint256 epochTime
+        uint256 epochTime,
+        uint256 tokenBonus
     );
 
     uint16 public current = 1;
@@ -48,6 +49,7 @@ contract def_Epoch is DefaultOSModule {
         current++;
 
         _Token.mint(msg.sender, TOKEN_BONUS);
-        emit EpochIncremented(address(_OS), msg.sender, current, epochTime);
+        
+        emit EpochIncremented(address(_OS), msg.sender, current, epochTime, TOKEN_BONUS);
     }
 }

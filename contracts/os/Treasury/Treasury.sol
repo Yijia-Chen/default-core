@@ -25,7 +25,16 @@ contract def_Treasury is DefaultOSModule {
     }
 
     // emitted events
-    event VaultOpened(address os, Vault vault, uint16 epochOpened);
+    event VaultOpened(
+      address os, 
+      Vault vault, 
+      address token, 
+      string name,
+      string symbol,
+      uint8 decimals,
+      uint8 fee, 
+      uint16 epochOpened
+    );
     event VaultFeeChanged(address os, Vault vault, uint8 newFee, uint16 epochOpened);
     event Deposited(address os, Vault vault, address member, uint256 amount, uint16 epoch);
     event Withdrawn(address os, Vault vault, address member, uint256 amount, uint16 epoch);
@@ -75,7 +84,16 @@ contract def_Treasury is DefaultOSModule {
         vaultFee[address(newVault)] = fee_;
 
         // record event for frontend
-        emit VaultOpened(address(_OS), newVault, _Epoch.current());
+        emit VaultOpened(
+          address(_OS),
+          newVault,
+          token_,
+          vaultName,
+          vaultSymbol,
+          vaultDecimals,
+          fee_, 
+          _Epoch.current()
+        );
     }
 
     // **********************************************************************
