@@ -12,8 +12,8 @@
 
 ## PeerRewards
 ### event MemberRegistered(address os, address member, uint16 epochRegisteredFor, uint256 ptsRegistered);
-### event AllocationSet(address os, address fromMember, address toMember, uint8 allocPts);
-### event AllocationGiven(address os, address fromMember, address toMember, uint256 allocGiven, uint16 epoch);
+### event AllocationSet(address os, address fromMember, address toMember, uint8 allocPts, uint16 currentEpoch);
+### event AllocationGiven(address os, address fromMember, address toMember, uint256 allocGiven, uint16 currentEpoch);
 ### event RewardsClaimed(address os, address member, uint256 totalRewardsClaimed, uint16 epochClaimed);
 
 ## Mining

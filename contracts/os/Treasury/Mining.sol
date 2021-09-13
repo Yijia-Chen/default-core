@@ -40,7 +40,7 @@ contract def_Mining is DefaultOSModule {
 
 
     // emitted events
-    event RewardsIssued(address os, address issuer, uint16 currentEpoch, uint256 newRewardsPerShare, uint256 tokenBonus);
+    event RewardsIssued(address os, address vault, address issuer, uint16 currentEpoch, uint256 newRewardsPerShare, uint256 tokenBonus);
     event RewardsClaimed(address os, uint16 epochClaimed, address member, uint256 totalRewardsClaimed);
     event MemberRegistered(address os, uint16 currentEpoch, address member);
 
@@ -119,7 +119,7 @@ contract def_Mining is DefaultOSModule {
 
         _Token.mint(msg.sender, TOKEN_BONUS);
 
-        emit RewardsIssued(address(_OS), msg.sender, _Epoch.current(), newRewardsPerShare, TOKEN_BONUS);
+        emit RewardsIssued(address(_OS), address(_vault), msg.sender, _Epoch.current(), newRewardsPerShare, TOKEN_BONUS);
     }
 
 
