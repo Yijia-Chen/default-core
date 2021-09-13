@@ -22,7 +22,7 @@
 ### event Registered(address os, uint16 currentEpoch, address member);
 
 ## Treasury
-### event VaultOpened(address os, Vault vault, address token, string name,string symbol, uint8 decimals, uint8 fee, uint16 epochOpened);
+### event VaultOpened(address os, Vault vault, string name,string symbol, uint8 decimals, uint8 fee, uint16 epochOpened);
 ### event VaultFeeChanged(address os, Vault vault, uint8 newFee, uint16 epochOpened);
 ### event Deposited(address os, Vault vault, address member, uint256 amount, uint16 epoch);
 ### event Withdrawn(address os, Vault vault, address member, uint256 amount, uint16 epoch);

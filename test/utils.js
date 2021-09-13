@@ -9,15 +9,6 @@ async function incrementWeek(customTime) {
   await ethers.provider.send('evm_mine');
 }
 
-function makeHex(str, bytes) {
-  var strArray = [];
-  for (var n = 0, l = str.length; n < l; n++) {
-    var hex = Number(str.charCodeAt(n)).toString(16);
-    strArray.push(hex);
-  }
-  return ethers.utils.hexZeroPad("0x" + strArray.join(''), bytes)
-}
-
 module.exports = {
   incrementWeek
 }

@@ -27,8 +27,7 @@ contract def_Treasury is DefaultOSModule {
     // emitted events
     event VaultOpened(
       address os, 
-      Vault vault, 
-      address token, 
+      Vault vault,  
       string name,
       string symbol,
       uint8 decimals,
@@ -86,8 +85,7 @@ contract def_Treasury is DefaultOSModule {
         // record event for frontend
         emit VaultOpened(
           address(_OS),
-          newVault,
-          token_,
+          newVault,          
           vaultName,
           vaultSymbol,
           vaultDecimals,
