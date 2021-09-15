@@ -5,6 +5,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "hardhat/console.sol";
 
+/// @title DAO Tracker
+/// @notice Keep track of global state of full list of DAOs and the addresses these DAOs map to
 contract DefaultOSFactory is Ownable { 
     
   mapping(string => address) public osMap;
@@ -12,14 +14,20 @@ contract DefaultOSFactory is Ownable {
 
   event OSCreated(address os, string id, string name);
 
-  function getOS(string memory daoId_) public view returns (address) {
-    return osMap[daoId_];
+
+  /// @notice Get the address associated with a DAO's string ID
+  /// @param daoId ID of DAO
+  /// @return address Address associated with the the DAO
+  function getDao(string memory daoId) public view returns (address) {
+    return daoMap[daoId];
   }
 
-  function createOS(address os_, string memory daoId_, string memory name_) public {
-    require(osMap[daoId_] == address(0), "DefaultOSFactory | createOS(): Alias already taken");
-    osMap[daoId_] = os_;
-    osList.push(osMap[daoId_]);
+  /// @notice Add a new DAO to full list of DAOs using DefaultOS. 
+  /// @param daoId ID of DAO
+  function setDao(string memory daoId, address os) public {
+    require(daoMap[daoId] == address(0), "DefaultOSFactory | setDao(): Alias already taken");
+    daoMap[daoId] = os;
+    daoList.push(daoMap[daoId]);
 
     emit OSCreated(os_, daoId_, name_);
   }

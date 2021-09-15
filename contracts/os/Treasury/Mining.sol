@@ -13,16 +13,23 @@ import "../Epoch/Epoch.sol";
 import "./Treasury.sol";
 import "./_Vault.sol";
 
+/// @title Installer for Mining module (MNG)
+/// @notice Factory contract for the Mining Module
 contract def_MiningInstaller is DefaultOSModuleInstaller("MNG") {
     string public moduleName = "Default Treasury Mining";
 
-    function install(DefaultOS os_) external override returns (address) {
-        def_Mining Mining = new def_Mining(os_);
-        Mining.transferOwnership(address(os_)); 
+    /// @notice Install Mining module on a DAO 
+    /// @return address Address of Mining module instance
+    /// @dev Requires TKN, EPC, and TSY modules to be enabled on DAO. install() is called by the DAO contract
+    function install() external override returns (address) {
+        def_Mining Mining = new def_Mining(DefaultOS(msg.sender));
+        Mining.transferOwnership(msg.sender); 
         return address(Mining);
     }
 }
 
+/// @title Mining module (MNG)
+/// @notice Allows members of DAO to mine the DEF token. Rewards have a set value that can be changed by the DAO. Rewards are distributed equally to all each held in the vault.
 contract def_Mining is DefaultOSModule {
 
     // Module Configuration
@@ -62,6 +69,8 @@ contract def_Mining is DefaultOSModule {
     // weekly rewards to the caller of the issueRewards() function
     uint256 public TOKEN_BONUS = 5000; 
 
+    /// @notice Set weekly token bonus to caller of issueRewards() function.
+    /// @param newTokenBonus_ # of tokens to be paid to caller of issueRewards function
     function setTokenBonus(uint256 newTokenBonus_) external onlyOS {
         TOKEN_BONUS = newTokenBonus_;
     }
@@ -72,7 +81,10 @@ contract def_Mining is DefaultOSModule {
     //                 GET THE PENDING REWARDS FOR THE USER
     // **********************************************************************
 
-    // calculate the available rewards for the caller
+
+    /// @notice Calculate the available rewards for the caller. 
+    /// @dev Available rewards are calculated as the [[sender's total balance in the vault] X [multipler on the reward per share]] - [unclaimable rewards for the sender]
+    /// @dev Rewards are denominated in the token's units / [1e12]
     function pendingRewards() public view returns (uint256) {
         uint256 totalHistoricalRewards = _vault.balanceOf(msg.sender) * accRewardsPerShare;                
         uint256 finalDepositorRewards = (totalHistoricalRewards - unclaimableRewards[msg.sender]) / MULT;
@@ -86,7 +98,9 @@ contract def_Mining is DefaultOSModule {
     //                  START THE TREASURY MINING PROGRAM
     // **********************************************************************
 
-    // assign the vault contract for the program to "activate" it
+    /// @notice Assign the vault contract to be mined. This "activates" the mining program
+    /// @param token_ the Address of the token to be mined
+    /// @dev The token should have a vault in the treasury before calling this function
     function assignVault(address token_) external onlyOS {        
         require (address(_vault) == address(0), "can only assign vault once");        
         _vault = _Treasury.getVault(token_);
@@ -101,6 +115,7 @@ contract def_Mining is DefaultOSModule {
     // Note: this design is not entirely ideal, because someone could manipulate the system by depositing/withdrawing right before
     // calling the accumulate rewards function. There might be some issues there, not entirely sure though how severe they are 
     // but intuition is telling me it is an okay trade off to make (for now).
+    /// @notice Sets the amount of rewards a miner can receive per token deposited in the vault. Rewards are distributed evenly to all tokens in the vault.
     function issueRewards() external {
 
         // issue only once per epoch
@@ -128,6 +143,8 @@ contract def_Mining is DefaultOSModule {
     //                 RESET MINING REWARDS COUNTER FOR USER
     // **********************************************************************
 
+    /// @notice Reset the mining rewards for member to 0.
+    /// @dev This function sets unclaimable rewards to the total balance of rewards for the member. This effectively sets rewards to zero since redeemable rewards = total possible rewards - uncaimable rewards
     function register() external {
         // reset the unclaimable rewards to the latest amount.
         unclaimableRewards[msg.sender] = _vault.balanceOf(msg.sender) * accRewardsPerShare;
@@ -142,6 +159,7 @@ contract def_Mining is DefaultOSModule {
     //                       CLAIM AVAILABLE REWARDS
     // **********************************************************************
 
+    /// @notice Redeem all available rewards 
     function claimRewards() external {
         require (registered[msg.sender], "member is not registered for mining program");
         
