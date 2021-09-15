@@ -17,7 +17,6 @@ async function main() {
   const DefaultEpochInstaller = await ethers.getContractFactory("def_EpochInstaller");
   const DefaultTreasuryInstaller = await ethers.getContractFactory("def_TreasuryInstaller");
   const DefaultMiningInstaller = await ethers.getContractFactory("def_MiningInstaller");
-  const DefaultTokenInstaller = await ethers.getContractFactory("def_TokenInstaller");
   const DefaultMembersInstaller = await ethers.getContractFactory("def_MembersInstaller");
   const DefaultPeerRewardsInstaller = await ethers.getContractFactory("def_PeerRewardsInstaller");
 
@@ -53,7 +52,7 @@ async function main() {
   await defaultPeerRewardsInstaller.deployed();
   console.log("[CONTRACT DEPLOYED] DefaultMembersInstaller: ", defaultPeerRewardsInstaller.address);
 
-  await defaultOSFactory.setOS(defaultOS.address)
+  await defaultOSFactory.setOS("default-id",defaultOS.address)
   await defaultOS.installModule(defaultTokenInstaller.address);
   await defaultOS.installModule(defaultEpochInstaller.address);
   await defaultOS.installModule(defaultTreasuryInstaller.address);
