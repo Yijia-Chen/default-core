@@ -1,86 +1,65 @@
+// npx hardhat run scripts/deploy.js --network <network-name>
+
 // We require the Hardhat Runtime Environment explicitly here. This is optional
 // but useful for running the script in a standalone fashion through `node <script>`.
 //
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
-const hre = require("hardhat");
+const { ethers } = require("hardhat");
 
 async function main() {
 
-  // main contract
-  const Operator           = await hre.ethers.getContractFactory("Operator");
+  const DefaultOSFactory = await ethers.getContractFactory("DefaultOSFactory");
 
-  // modules
-  const Memberships        = await hre.ethers.getContractFactory("Memberships");
-  const DefToken           = await hre.ethers.getContractFactory("DefaultToken");
-  const UsdCoin            = await hre.ethers.getContractAt("ERC20", );
-  const TreasuryVault      = await hre.ethers.getContractFactory("TreasuryVaultV1");
-  const BalanceSheetMining = await hre.ethers.getContractFactory("BalanceSheetMiningV1");
-  const ContributorBudget  = await hre.ethers.getContractFactory("ContributorBudgetV1");
+  const DefaultOS = await ethers.getContractFactory("DefaultOS");
 
-  // states
-  const ClaimableRewards   = await hre.ethers.getContractFactory("ClaimableRewards");
-  const VaultShares        = await hre.ethers.getContractFactory("VaultShares");
+  const DefaultTokenInstaller = await ethers.getContractFactory("def_TokenInstaller");
+  const DefaultEpochInstaller = await ethers.getContractFactory("def_EpochInstaller");
+  const DefaultTreasuryInstaller = await ethers.getContractFactory("def_TreasuryInstaller");
+  const DefaultMiningInstaller = await ethers.getContractFactory("def_MiningInstaller");
+  const DefaultTokenInstaller = await ethers.getContractFactory("def_TokenInstaller");
+  const DefaultMembersInstaller = await ethers.getContractFactory("def_MembersInstaller");
+  const DefaultPeerRewardsInstaller = await ethers.getContractFactory("def_PeerRewardsInstaller");
 
-  const defToken = await DefToken.deploy();
-  await defToken.deployed();
-  console.log("[CONTRACT DEPLOYED] Default Token: ", defToken.address);
+  const defaultOSFactory = await DefaultOSFactory.deploy()
+  await defaultOSFactory.deployed();
+  console.log("[CONTRACT DEPLOYED] DefaultOSFactory: ", defaultOSFactory.address);
 
-  const memberships = await Memberships.deploy(process.env.CONTRIBUTOR_WHITELIST);
-  await memberships.deployed();
-  console.log("[CONTRACT DEPLOYED] Memberships: ", memberships.address);
+  const defaultOS = await DefaultOS.deploy("Default DAO", "default", defaultOSFactory.address)
+  await defaultOS.deployed();
+  console.log("[CONTRACT DEPLOYED] DefaultOS: ", defaultOS.address);
   
- const defVault = await TreasuryVault.deploy(defToken.address, 85);
- await defVault.deployed();
- const defShares = await ethers.getContractAt("VaultShares", await defVault.Shares());
- console.log("[CONTRACT DEPLOYED] DEF Treasury Vault: ", defVault.address);
- console.log("[CONTRACT DEPLOYED] DEF Treasury Vault Shares: ", defShares.address);
+  const defaultTokenInstaller = await DefaultTokenInstaller.deploy();
+  await defaultTokenInstaller.deployed();
+  console.log("[CONTRACT DEPLOYED] DefaultTokenInstaller: ", defaultTokenInstaller.address);
 
- const usdcVault = await TreasuryVault.deploy(process.env.POLYGON_MAINNET_USDC_CONTRACT_ADDRESS, 10);
- await usdcVault.deployed();
- const usdcShares = await ethers.getContractAt("VaultShares", await usdcVault.Shares());
- console.log("[CONTRACT DEPLOYED] USDC Treasury Vault: ", usdcVault.address);
- console.log("[CONTRACT DEPLOYED] USDC Treasury Vault Shares: ", usdcShares.address);
+  const defaultEpochInstaller = await DefaultEpochInstaller.deploy();
+  await defaultEpochInstaller.deployed();
+  console.log("[CONTRACT DEPLOYED] DefaultEpochInstaller: ", defaultEpochInstaller.address);
+
+  const defaultTreasuryInstaller = await DefaultTreasuryInstaller.deploy();
+  await defaultTreasuryInstaller.deployed();
+  console.log("[CONTRACT DEPLOYED] DefaultTreasuryInstaller: ", defaultTreasuryInstaller.address);
+
+  const defaultMiningInstaller = await DefaultMiningInstaller.deploy();
+  await defaultMiningInstaller.deployed();
+  console.log("[CONTRACT DEPLOYED] DefaultMiningInstaller: ", defaultMiningInstaller.address);
+
+  const defaultMembersInstaller = await DefaultMembersInstaller.deploy();
+  await defaultMembersInstaller.deployed();
+  console.log("[CONTRACT DEPLOYED] DefaultMembersInstaller: ", defaultMembersInstaller.address);
   
-  const mining = await BalanceSheetMining.deploy(usdcShares.address, defShares.address);
-  await mining.deployed();
-  const rewards = await ethers.getContractAt("ClaimableRewards", await mining.Rewards());
-  console.log("[CONTRACT DEPLOYED] Balance Sheet Mining: ", mining.address);
-  console.log("[CONTRACT DEPLOYED] Rewards: ", mining.address);
+  const defaultPeerRewardsInstaller = await DefaultPeerRewardsInstaller.deploy();
+  await defaultPeerRewardsInstaller.deployed();
+  console.log("[CONTRACT DEPLOYED] DefaultMembersInstaller: ", defaultPeerRewardsInstaller.address);
 
-  const budget = await ContributorBudget.deploy(defShares.address, memberships.address);
-  await budget.deployed();
-  console.log("[CONTRACT DEPLOYED] Contributor Budget: ", budget.address);
-
-   const operator = await Operator.deploy(
-      memberships.address,
-      defToken.address,
-      usdcVault.address,
-      defVault.address,
-      mining.address,
-      budget.address
-  )
-  await operator.deployed();
-  console.log("[CONTRACT DEPLOYED] Operator: ", operator.address);
-
-  await this.defToken.approveApplication(this.operator.address);
-  console.log("[CONTRACT APPROVED] Default Token -> Operator");
-
-  await this.mining.approveApplication(this.operator.address);
-  console.log("[CONTRACT APPROVED] Mining -> Operator");
-
-  await this.defVault.approveApplication(this.operator.address);
-  console.log("[CONTRACT APPROVED] Treasury Vault: DEF -> Operator");
-
-  await this.usdcVault.approveApplication(this.operator.address);
-  console.log("[CONTRACT APPROVED] Treasury Vault: USDC -> Operator");
-
-  await this.defShares.approveApplication(this.operator.address);
-  console.log("[CONTRACT APPROVED] VaultShares: DEF-VS -> Operator");
-
-  await this.defShares.approveApplication(this.mining.address);
-  console.log("[CONTRACT APPROVED] VaultShares: DEF-VS -> Mining");
-
+  await defaultOSFactory.setDao(defaultOS.address)
+  await defaultOS.installModule(defaultTokenInstaller.address);
+  await defaultOS.installModule(defaultEpochInstaller.address);
+  await defaultOS.installModule(defaultTreasuryInstaller.address);
+  await defaultOS.installModule(defaultMiningInstaller.address);
+  await defaultOS.installModule(defaultMembersInstaller.address);
+  await defaultOS.installModule(defaultPeerRewardsInstaller.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
