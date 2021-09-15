@@ -69,10 +69,10 @@ contract DefaultOS is Ownable {
         DefaultOSFactory factory_
     ) {
         organizationName = organizationName_;
-        factory_.setDao(organizationId_, address(this));
+        factory_.createOS(address(this), organizationId_, organizationName_);
     }
 
-    event ModuleInstalled(bytes3 moduleKeycode, address OSAddress, address moduleAddress);
+
     /// @notice Allow DAO to add module to itself
     /// @param installer_ Address of module's contract factory
     function installModule(DefaultOSModuleInstaller installer_)
@@ -82,7 +82,7 @@ contract DefaultOS is Ownable {
         bytes3 moduleKeyCode = installer_.moduleKeycode();        
         MODULES[moduleKeyCode] = installer_.install();
 
-        emit ModuleInstalled(moduleKeyCode, address(this), MODULES[moduleKeyCode]);
+        emit ModuleInstalled(address(this), MODULES[moduleKeyCode], moduleKeyCode);
     }
 
     /// @notice Get address of DAO's module instance

@@ -9,10 +9,11 @@ import "hardhat/console.sol";
 /// @notice Keep track of global state of full list of DAOs and the addresses these DAOs map to
 contract DefaultOSFactory is Ownable { 
     
-  mapping(string => address) public daoMap;
-  address[] private daoList;
+  mapping(string => address) public osMap;
+  address[] private osList;
 
-  event DaoCreated(address os, string id);
+  event OSCreated(address os, string id, string name);
+
 
   /// @notice Get the address associated with a DAO's string ID
   /// @param daoId ID of DAO
@@ -28,6 +29,6 @@ contract DefaultOSFactory is Ownable {
     daoMap[daoId] = os;
     daoList.push(daoMap[daoId]);
 
-    emit DaoCreated(os, daoId);
+    emit OSCreated(os_, daoId_, name_);
   }
 }
