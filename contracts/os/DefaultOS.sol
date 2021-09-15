@@ -69,9 +69,10 @@ contract DefaultOS is Ownable {
         DefaultOSFactory factory_
     ) {
         organizationName = organizationName_;
-        factory_.createOS(address(this), organizationId_, organizationName_);
+        factory_.setDao(organizationId_, address(this));
     }
 
+    event ModuleInstalled(address factory, address os, bytes3 moduleKeyCode);  
 
     /// @notice Allow DAO to add module to itself
     /// @param installer_ Address of module's contract factory

@@ -12,23 +12,23 @@ contract DefaultOSFactory is Ownable {
   mapping(string => address) public osMap;
   address[] private osList;
 
-  event OSCreated(address os, string id, string name);
+  event OSCreated(address os, string id);
 
 
   /// @notice Get the address associated with a DAO's string ID
   /// @param daoId ID of DAO
   /// @return address Address associated with the the DAO
   function getDao(string memory daoId) public view returns (address) {
-    return daoMap[daoId];
+    return osMap[daoId];
   }
 
   /// @notice Add a new DAO to full list of DAOs using DefaultOS. 
   /// @param daoId ID of DAO
   function setDao(string memory daoId, address os) public {
-    require(daoMap[daoId] == address(0), "DefaultOSFactory | setDao(): Alias already taken");
-    daoMap[daoId] = os;
-    daoList.push(daoMap[daoId]);
+    require(osMap[daoId] == address(0), "DefaultOSFactory | setDao(): Alias already taken");
+    osMap[daoId] = os;
+    osList.push(osMap[daoId]);
 
-    emit OSCreated(os_, daoId_, name_);
+    emit OSCreated(os, daoId);
   }
 }
