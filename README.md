@@ -10,6 +10,16 @@ The purpose of `default-core` is to give teams the core contracts they need to c
 - **Treasury**: Members can lock away their ERC20 tokens in "vaults" in exchange for shares.
 - **Mining**: Members who lock away the DAO's native ERC20 token in a vault receive token rewards.
 
+## Running locally
+
+Make sure you have [Ganache UI](https://www.trufflesuite.com/ganache) or [ganache-cli](https://github.com/trufflesuite/ganache#command-line-use) running on `localhost:8545`.
+
+```
+npm install
+npx hardhat compile
+npx hardhat run scripts/init.js --network ganache
+```
+
 ## Contract overview
 
 **Core DefaultOS**
@@ -34,10 +44,6 @@ The purpose of `default-core` is to give teams the core contracts they need to c
 - `_Vault`: Vault allows a member to deposit an ERC20 tokens with a DAO. The member receives shares in the vault in exchange, and these shares are themselves ERC20 tokens that can only be transferred by the DAO. Each vault holds a single token.
 - `Treasury`: A treasury is a collection of vaults and each vault can store a single token. Members can deposit and withdraw from vaults, and the treasury takes a % fee from each withdraw.
 - `Mining`: Allows members of DAO to mine the DAO's native token. Rewards have a set value that can be changed by the DAO. Rewards are distributed equally to each token held in the vault.
-
-## Running locally
-
-TBC
 
 ## Events
 
