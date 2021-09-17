@@ -61,11 +61,9 @@ contract DefaultOS is Ownable {
 
     /// @notice Set organization name and add DAO org ID to DAO tracker
     /// @param organizationName_ Name of org
-    /// @param organizationId_ ID of org
     /// @param factory_ address of DAO factory contract, which keeps track of all DAO OS instances
     constructor(
-        string memory organizationName_,
-        string memory organizationId_,
+        bytes32 memory organizationName_,
         DefaultOSFactory factory_
     ) {
         organizationName = organizationName_;
