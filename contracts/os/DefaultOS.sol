@@ -56,18 +56,15 @@ contract DefaultOSModule is Ownable {
 /// @title Default OS
 /// @notice Instance of a Default OS
 contract DefaultOS is Ownable {
-    string public organizationName;
+    bytes32 public organizationName;
     mapping(bytes3 => address) public MODULES;
 
     /// @notice Set organization name and add DAO org ID to DAO tracker
     /// @param organizationName_ Name of org
-    /// @param factory_ address of DAO factory contract, which keeps track of all DAO OS instances
     constructor(
-        bytes32 memory organizationName_,
-        DefaultOSFactory factory_
+        bytes32 organizationName_
     ) {
         organizationName = organizationName_;
-        factory_.setOS(organizationId_, address(this));
     }
 
     event ModuleInstalled(address factory, address os, bytes3 moduleKeyCode);  
