@@ -17,12 +17,12 @@ contract DefaultOSFactory is Ownable {
 
   /// @notice Add a new DAO to full list of DAOs using DefaultOS. 
   /// @param name_ name of DAO
-  function setOS(bytes32 memory name_) public {
+  function setOS(bytes32 name_) public {
     require(osMap[name_] == address(0), "DefaultOSFactory | setOS(): Alias already taken");
-    address os = address(new DefaultOS(name_, address(this)));
+    address os = address(new DefaultOS(name_));
     osMap[name_] = os;
     osList.push(os);
 
-    emit OSCreated(os, name);
+    emit OSCreated(os, name_);
   }
 }
