@@ -20,8 +20,8 @@ describe("Treasury", function () {
     this.factory = await this.DefaultOSFactory.deploy()
     await this.factory.deployed()
 
-    this.defaultOS = await this.DefaultOS.deploy("Default DAO", "default", this.factory.address);
-    this.default = await this.defaultOS.deployed();
+    await this.factory.setOS("0x0000000000000000000000000000000000000000000000000044656661756c74");
+    this.default = await ethers.getContractAt("DefaultOS", await this.factory.osMap("0x0000000000000000000000000000000000000000000000000044656661756c74"));
 
     this.treasuryModule = await this.DefaultTreasuryInstaller.deploy();
     await this.treasuryModule.deployed();

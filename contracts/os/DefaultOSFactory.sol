@@ -19,10 +19,11 @@ contract DefaultOSFactory is Ownable {
   /// @param name_ name of DAO
   function setOS(bytes32 name_) public {
     require(osMap[name_] == address(0), "DefaultOSFactory | setOS(): Alias already taken");
-    address os = address(new DefaultOS(name_));
-    osMap[name_] = os;
-    osList.push(os);
+    DefaultOS os = new DefaultOS(name_);
+    os.transferOwnership(msg.sender);
+    osMap[name_] = address(os);
+    osList.push(address(os));
 
-    emit OSCreated(os, name_);
+    emit OSCreated(address(os), name_);
   }
 }

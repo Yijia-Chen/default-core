@@ -1,25 +1,20 @@
 const { expect } = require("chai");
 const { incrementWeek } = require("../utils")
 
-describe("DefaultOS.sol", function () {
+describe("Epoch.sol", function () {
   before(async function () {
     this.signers = await ethers.getSigners();
     this.dev = this.signers[0];
     this.userA = this.signers[1];
     this.factory = await (await ethers.getContractFactory("DefaultOSFactory")).deploy()
     this.daos = await this.factory.deployed()
-    // console.log("D: ", this.daos.address)
 
     this.DefaultTokenInstaller = await ethers.getContractFactory("def_TokenInstaller");
     this.tokenModule = await this.DefaultTokenInstaller.deploy();
     await this.tokenModule.deployed();
 
-    this.DefaultOS = await (await ethers.getContractFactory("DefaultOS")).deploy(
-      "Default DAO",
-      "default",
-      this.daos.address
-    );
-    this.default = await this.DefaultOS.deployed();
+    await this.daos.setOS("0x0000000000000000000000000000000000000000000000000044656661756c74");
+    this.default = await ethers.getContractAt("DefaultOS", await this.daos.osMap("0x0000000000000000000000000000000000000000000000000044656661756c74"));
   })
 
   beforeEach(async function () {

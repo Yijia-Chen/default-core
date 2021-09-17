@@ -61,9 +61,7 @@ contract DefaultOS is Ownable {
 
     /// @notice Set organization name and add DAO org ID to DAO tracker
     /// @param organizationName_ Name of org
-    constructor(
-        bytes32 organizationName_
-    ) {
+    constructor(bytes32 organizationName_) {
         organizationName = organizationName_;
     }
 

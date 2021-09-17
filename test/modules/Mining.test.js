@@ -14,15 +14,11 @@ describe("Mining.sol", function () {
     this.userC = this.signers[3];
     this.userD = this.signers[4];
 
-    this.DefaultOSFactory = await (
-      await ethers.getContractFactory("DefaultOSFactory")
-    ).deploy();
+    this.DefaultOSFactory = await (await ethers.getContractFactory("DefaultOSFactory")).deploy();
     this.daos = await this.DefaultOSFactory.deployed();
 
-    this.DefaultOS = await (
-      await ethers.getContractFactory("DefaultOS")
-    ).deploy("Default DAO", "default", this.daos.address);
-    this.default = await this.DefaultOS.deployed();
+    await this.daos.setOS("0x0000000000000000000000000000000000000000000000000044656661756c74");
+    this.default = await ethers.getContractAt("DefaultOS", await this.daos.osMap("0x0000000000000000000000000000000000000000000000000044656661756c74"));
 
     this.TokenInstaller = await ethers.getContractFactory("def_TokenInstaller");
     this.tokenModule = await this.TokenInstaller.deploy();

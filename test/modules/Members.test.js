@@ -32,8 +32,8 @@ describe("Members Module", function () {
     this.factory = await this.DefaultOSFactory.deploy()
     await this.factory.deployed()
 
-    this.defaultOS = await this.DefaultOS.deploy("Default DAO", "default", this.factory.address);
-    this.default = await this.defaultOS.deployed();
+    await this.factory.setOS("0x0000000000000000000000000000000000000000000000000044656661756c74");
+    this.default = await ethers.getContractAt("DefaultOS", await this.factory.osMap("0x0000000000000000000000000000000000000000000000000044656661756c74"));
 
     await this.default.installModule(this.tokenModule.address);
     this.token = await ethers.getContractAt("def_Token", await this.default.getModule("0x544b4e")); // "TKN"

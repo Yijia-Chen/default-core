@@ -7,14 +7,10 @@ describe("DefaultOS.sol", function () {
         this.dev = this.signers[0];
         this.factory = await (await ethers.getContractFactory("DefaultOSFactory")).deploy()
         this.daos = await this.factory.deployed()
-        // console.log("D: ", this.daos.address)
 
-        this.DefaultOS = await (await ethers.getContractFactory("DefaultOS")).deploy(
-          "Default DAO",
-          "default",
-          this.daos.address
-        );
-        this.default = await this.DefaultOS.deployed();
+        await this.daos.setOS("0x0000000000000000000000000000000000000000000000000044656661756c74");
+        this.default = await ethers.getContractAt("DefaultOS", await this.daos.osMap("0x0000000000000000000000000000000000000000000000000044656661756c74"));
+
     })
 
     // testing is not done here, use a ModuleInstaller stub instead of the Token module

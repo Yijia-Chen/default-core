@@ -17,7 +17,6 @@ describe("Peer Rewards Module", async function () {
     this.userE = this.signers[5];
 
     this.DefaultOSFactory = await ethers.getContractFactory("DefaultOSFactory")
-    this.DefaultOS = await ethers.getContractFactory("DefaultOS");
     this.DefaultTokenInstaller = await ethers.getContractFactory("def_TokenInstaller");
     this.DefaultMembersInstaller = await ethers.getContractFactory("def_MembersInstaller");
     this.DefaultPeerRewardsInstaller = await ethers.getContractFactory("def_PeerRewardsInstaller");
@@ -29,8 +28,8 @@ describe("Peer Rewards Module", async function () {
     this.factory = await this.DefaultOSFactory.deploy()
     await this.factory.deployed()
 
-    this.defaultOS = await this.DefaultOS.deploy("Default DAO", "default", this.factory.address);
-    this.default = await this.defaultOS.deployed();
+    await this.factory.setOS("0x0000000000000000000000000000000000000000000000000044656661756c74");
+    this.default = await ethers.getContractAt("DefaultOS", await this.factory.osMap("0x0000000000000000000000000000000000000000000000000044656661756c74"));
 
     this.tokenModule = await this.DefaultTokenInstaller.deploy();
     await this.tokenModule.deployed();
