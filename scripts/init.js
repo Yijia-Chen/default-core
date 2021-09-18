@@ -8,10 +8,9 @@
 const { ethers } = require("hardhat");
 
 async function main() {
+  const defaultDaoBytes = ethers.utils.formatBytes32String("Default Dao")
 
   const DefaultOSFactory = await ethers.getContractFactory("DefaultOSFactory");
-
-  const DefaultOS = await ethers.getContractFactory("DefaultOS");
 
   const DefaultTokenInstaller = await ethers.getContractFactory("def_TokenInstaller");
   const DefaultEpochInstaller = await ethers.getContractFactory("def_EpochInstaller");
@@ -23,9 +22,11 @@ async function main() {
   const defaultOSFactory = await DefaultOSFactory.deploy()
   await defaultOSFactory.deployed();
   console.log("[CONTRACT DEPLOYED] DefaultOSFactory: ", defaultOSFactory.address);
-
-  const defaultOS = await DefaultOS.deploy("Default DAO", "default", defaultOSFactory.address)
-  await defaultOS.deployed();
+  
+  // get default os contract created from factory
+  await defaultOSFactory.setOS(defaultDaoBytes)
+  const defaultOsAddress = await defaultOSFactory.osMap(defaultDaoBytes)
+  const defaultOS = await ethers.getContractAt("DefaultOS", defaultOsAddress);
   console.log("[CONTRACT DEPLOYED] DefaultOS: ", defaultOS.address);
   
   const defaultTokenInstaller = await DefaultTokenInstaller.deploy();
@@ -52,7 +53,6 @@ async function main() {
   await defaultPeerRewardsInstaller.deployed();
   console.log("[CONTRACT DEPLOYED] DefaultMembersInstaller: ", defaultPeerRewardsInstaller.address);
 
-  await defaultOSFactory.setOS("default-id",defaultOS.address)
   await defaultOS.installModule(defaultTokenInstaller.address);
   await defaultOS.installModule(defaultEpochInstaller.address);
   await defaultOS.installModule(defaultTreasuryInstaller.address);
