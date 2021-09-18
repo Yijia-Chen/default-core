@@ -37,7 +37,7 @@ task("approveBudget", "approves application for", async (taskArgs, hre) => {
 module.exports = {
   defaultNetwork: "hardhat",
   networks: {
-    ganache: {
+    dev: {
       url: "http://0.0.0.0:8545",
     },
     hardhat: {},
