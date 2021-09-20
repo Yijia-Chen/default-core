@@ -65,7 +65,7 @@ contract DefaultOS is Ownable {
         organizationName = organizationName_;
     }
 
-    event ModuleInstalled(address factory, address os, bytes3 moduleKeyCode);  
+    event ModuleInstalled(address os, address module, bytes3 moduleKeyCode);
 
     /// @notice Allow DAO to add module to itself
     /// @param installer_ Address of module's contract factory
