@@ -19,7 +19,19 @@ Make sure you have [Ganache UI](https://www.trufflesuite.com/ganache) or [ganach
 ```
 npm install
 npx hardhat compile
-npx hardhat run scripts/init.js --network ganache
+npx hardhat run scripts/deploy.js --network dev
+```
+
+## Generate seed data
+Still a work in progress.
+Currently DefaultOS, DefaultOSFactory, Member, and Token contracts have seed data.
+Contracts that still need seed data:
+- Epoch.sol
+- Treasury/*.sol
+- Members/PeerRewards.sol
+
+```
+npx hardhat run scripts/seedData.js --network dev
 ```
 
 ## Generate documentation 

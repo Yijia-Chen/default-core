@@ -1,16 +1,9 @@
-// npx hardhat run scripts/deploy.js --network <network-name>
-
-// We require the Hardhat Runtime Environment explicitly here. This is optional
-// but useful for running the script in a standalone fashion through `node <script>`.
-//
-// When running the script with `npx hardhat run <script>` you'll find the Hardhat
-// Runtime Environment's members available in the global scope.
 const { ethers } = require("hardhat");
 
 async function main() {
-  const defaultDaoBytes = ethers.utils.formatBytes32String("Default Dao")
+  const defaultOsName = ethers.utils.formatBytes32String("Default Dao")
 
-  const DefaultOSFactory = await ethers.getContractFactory("DefaultOSFactory");
+  const DefaultOsFactory = await ethers.getContractFactory("DefaultOSFactory");
 
   const DefaultTokenInstaller = await ethers.getContractFactory("def_TokenInstaller");
   const DefaultEpochInstaller = await ethers.getContractFactory("def_EpochInstaller");
@@ -19,15 +12,16 @@ async function main() {
   const DefaultMembersInstaller = await ethers.getContractFactory("def_MembersInstaller");
   const DefaultPeerRewardsInstaller = await ethers.getContractFactory("def_PeerRewardsInstaller");
 
-  const defaultOSFactory = await DefaultOSFactory.deploy()
-  await defaultOSFactory.deployed();
-  console.log("[CONTRACT DEPLOYED] DefaultOSFactory: ", defaultOSFactory.address);
-  
+  const defaultOsFactory = await DefaultOsFactory.deploy()
+  await defaultOsFactory.deployed();
+  console.log("[CONTRACT DEPLOYED] DefaultOSFactory: ", defaultOsFactory.address);
+
   // get default os contract created from factory
-  await defaultOSFactory.setOS(defaultDaoBytes)
-  const defaultOsAddress = await defaultOSFactory.osMap(defaultDaoBytes)
-  const defaultOS = await ethers.getContractAt("DefaultOS", defaultOsAddress);
-  console.log("[CONTRACT DEPLOYED] DefaultOS: ", defaultOS.address);
+  await defaultOsFactory.setOS(defaultOsName)
+  const defaultOsAddress = await defaultOsFactory.osMap(defaultOsName)
+  const defaultOs = await ethers.getContractAt("DefaultOS", defaultOsAddress);
+
+  console.log("[CONTRACT DEPLOYED] DefaultOs: ", defaultOs.address);
   
   const defaultTokenInstaller = await DefaultTokenInstaller.deploy();
   await defaultTokenInstaller.deployed();
@@ -51,21 +45,24 @@ async function main() {
   
   const defaultPeerRewardsInstaller = await DefaultPeerRewardsInstaller.deploy();
   await defaultPeerRewardsInstaller.deployed();
-  console.log("[CONTRACT DEPLOYED] DefaultMembersInstaller: ", defaultPeerRewardsInstaller.address);
+  console.log("[CONTRACT DEPLOYED] DefaultPeerRewardsInstaller: ", defaultPeerRewardsInstaller.address);
 
-  await defaultOS.installModule(defaultTokenInstaller.address);
-  await defaultOS.installModule(defaultEpochInstaller.address);
-  await defaultOS.installModule(defaultTreasuryInstaller.address);
-  await defaultOS.installModule(defaultMiningInstaller.address);
-  await defaultOS.installModule(defaultMembersInstaller.address);
-  await defaultOS.installModule(defaultPeerRewardsInstaller.address);
+  await defaultOs.installModule(defaultTokenInstaller.address);
+  await defaultOs.installModule(defaultEpochInstaller.address);
+  await defaultOs.installModule(defaultTreasuryInstaller.address);
+  await defaultOs.installModule(defaultMiningInstaller.address);
+  await defaultOs.installModule(defaultMembersInstaller.address);
+  await defaultOs.installModule(defaultPeerRewardsInstaller.address);
+  return {
+    defaultOs,
+    defaultOsFactory,
+    defaultTokenInstaller,
+    defaultEpochInstaller,
+    defaultTreasuryInstaller,
+    defaultMiningInstaller,
+    defaultMembersInstaller,
+    defaultPeerRewardsInstaller,
+  }
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+module.exports = main;

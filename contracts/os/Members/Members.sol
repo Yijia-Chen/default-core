@@ -42,10 +42,10 @@ contract def_Members is Staking, DefaultOSModule {
 
     // Emitted events for this module
     event MemberRegistered(address os, address member, bytes32 alias_, uint16 epoch);
-    event TokensStaked(address os, address member, uint256 amount, uint16 lockDuration, uint16 epoch);
-    event TokensUnstaked(address os, address member, uint256 amount, uint16 lockDuration, uint16 epoch);
-    event EndorsementGiven(address os, address fromMember, address toMember, uint256 endorsementsGiven, uint16 epoch);
-    event EndorsementWithdrawn(address os, address fromMember, address toMember, uint256 endorsementsWithdrawn, uint16 epoch);
+    event TokensStaked(address os, address indexed member, uint256 amount, uint16 lockDuration, uint16 indexed epoch);
+    event TokensUnstaked(address os, address indexed member, uint256 amount, uint16 lockDuration, uint16 indexed epoch);
+    event EndorsementGiven(address os, address indexed fromMember, address indexed toMember, uint256 endorsementsGiven, uint16 indexed epoch);
+    event EndorsementWithdrawn(address os, address indexed fromMember, address indexed toMember, uint256 endorsementsWithdrawn, uint16 indexed epoch);
 
 
     mapping(bytes32 => address) public getMemberForAlias;
