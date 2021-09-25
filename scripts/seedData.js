@@ -152,22 +152,23 @@ async function bulkEndorseMembers(os, membersModule, tokenModule, members) {
       await membersModule.connect(member).endorseMember(memberToEndorse.address, totalEndorsements);
 
       // verify
-      membersModule.once(membersModule.filters.EndorsementGiven(null, member.address, memberToEndorse.address), 
-      async (_os, _fromMember, _toMember, _endorsementsGiven, _epoch) => {
-        console.log(`[OS ${osName}][Endorsements Received] ${_toMember} received ${_endorsementsGiven.toString()} from ${_fromMember}`);
+      membersModule.once(
+        membersModule.filters.EndorsementGiven(null, member.address, memberToEndorse.address), 
+        async (_os, _fromMember, _toMember, _endorsementsGiven, _epoch) => {
+          console.log(`[OS ${osName}][Endorsements Received] ${_toMember} received ${_endorsementsGiven.toString()} from ${_fromMember}`);
 
-        // randomly create a few withdrawals
-        if (faker.datatype.boolean()) {
-          const signer = await ethers.getSigner(_fromMember);
-          const amtToWithdrawl = ethers.BigNumber.from(faker.datatype.number({min: 1, max: 100})); // there should never be less than 100 endorsements given
-          await membersModule.connect(signer).withdrawEndorsementFrom(_toMember, amtToWithdrawl);
+          // randomly create a few withdrawals
+          if (faker.datatype.boolean()) {
+            const signer = await ethers.getSigner(_fromMember);
+            const amtToWithdrawl = ethers.BigNumber.from(faker.datatype.number({min: 1, max: 100})); // there should never be less than 100 endorsements given
+            await membersModule.connect(signer).withdrawEndorsementFrom(_toMember, amtToWithdrawl);
 
-          // verify 
-          membersModule.once(membersModule.filters.EndorsementWithdrawn(null, _fromMember, _toMember), 
-          async (os_, fromMember_, toMember_, endorsementsWithdrawn_, epoch_) => {
-            console.log(`[OS ${osName}][Endorsement Withdrawn] ${fromMember_} withdrew ${endorsementsWithdrawn_.toString()} from their endorsement to ${toMember_}`);
-
-          })
+            // verify 
+            membersModule.once(
+              membersModule.filters.EndorsementWithdrawn(null, _fromMember, _toMember), 
+              async (os_, fromMember_, toMember_, endorsementsWithdrawn_, epoch_) => {
+                console.log(`[OS ${osName}][Endorsement Withdrawn] ${fromMember_} withdrew ${endorsementsWithdrawn_.toString()} from their endorsement to ${toMember_}`);
+            });
         }
       });
     });
