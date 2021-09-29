@@ -8,7 +8,10 @@ describe("DefaultOS.sol", function () {
         this.factory = await (await ethers.getContractFactory("DefaultOSFactory")).deploy()
         this.daos = await this.factory.deployed()
 
-        await this.daos.setOS("0x0000000000000000000000000000000000000000000000000044656661756c74");
+        await this.daos.setOS(
+          "0x0000000000000000000000000000000000000000000000000044656661756c74",
+          "0x0000000000000000000000000000000000000000000000000044656661756c74"
+        );
         this.default = await ethers.getContractAt("DefaultOS", await this.daos.osMap("0x0000000000000000000000000000000000000000000000000044656661756c74"));
 
     })

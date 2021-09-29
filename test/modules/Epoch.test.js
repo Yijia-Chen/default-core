@@ -13,7 +13,10 @@ describe("Epoch.sol", function () {
     this.tokenModule = await this.DefaultTokenInstaller.deploy();
     await this.tokenModule.deployed();
 
-    await this.daos.setOS("0x0000000000000000000000000000000000000000000000000044656661756c74");
+    await this.daos.setOS(
+      "0x0000000000000000000000000000000000000000000000000044656661756c74",
+      "0x0000000000000000000000000000000000000000000000000044656661756c74"
+    );
     this.default = await ethers.getContractAt("DefaultOS", await this.daos.osMap("0x0000000000000000000000000000000000000000000000000044656661756c74"));
   })
 

@@ -20,7 +20,10 @@ describe("Treasury", function () {
     this.factory = await this.DefaultOSFactory.deploy()
     await this.factory.deployed()
 
-    await this.factory.setOS("0x0000000000000000000000000000000000000000000000000044656661756c74");
+    await this.factory.setOS(
+      "0x0000000000000000000000000000000000000000000000000044656661756c74",
+      "0x0000000000000000000000000000000000000000000000000044656661756c74"
+    );
     this.default = await ethers.getContractAt("DefaultOS", await this.factory.osMap("0x0000000000000000000000000000000000000000000000000044656661756c74"));
 
     this.treasuryModule = await this.DefaultTreasuryInstaller.deploy();

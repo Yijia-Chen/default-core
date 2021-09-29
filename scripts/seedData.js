@@ -25,11 +25,13 @@ async function seedData() {
   const accounts = await ethers.getSigners();
 
   const testOsName = ethers.utils.formatBytes32String('testOs');
+  const testOsAlias = ethers.utils.formatBytes32String('testOsAlias');
   const otherOsName = ethers.utils.formatBytes32String('otherOs');
+  const otherOsAlias = ethers.utils.formatBytes32String('otherOsAlias');
 
   // create two new test OSs
-  await defaultOsFactory.setOS(testOsName);
-  await defaultOsFactory.setOS(otherOsName);
+  await defaultOsFactory.setOS(testOsName, testOsAlias);
+  await defaultOsFactory.setOS(otherOsName, otherOsAlias);
   
   const testOsAddress = await defaultOsFactory.osMap(testOsName);
   const otherOsAddress = await defaultOsFactory.osMap(otherOsName);

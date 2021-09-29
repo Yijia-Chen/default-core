@@ -2,6 +2,7 @@ const { ethers } = require("hardhat");
 
 async function main() {
   const defaultOsName = ethers.utils.formatBytes32String("Default Dao")
+  const defaultOsAlias = ethers.utils.formatBytes32String("default")
 
   const DefaultOsFactory = await ethers.getContractFactory("DefaultOSFactory");
 
@@ -17,7 +18,7 @@ async function main() {
   console.log("[CONTRACT DEPLOYED] DefaultOSFactory: ", defaultOsFactory.address);
 
   // get default os contract created from factory
-  await defaultOsFactory.setOS(defaultOsName)
+  await defaultOsFactory.setOS(defaultOsName, defaultOsAlias)
   const defaultOsAddress = await defaultOsFactory.osMap(defaultOsName)
   const defaultOs = await ethers.getContractAt("DefaultOS", defaultOsAddress);
 
