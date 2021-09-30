@@ -5,12 +5,15 @@ describe("DefaultOS.sol", function () {
     before(async function () {
         this.signers = await ethers.getSigners();
         this.dev = this.signers[0];
-        this.factory = await (await ethers.getContractFactory("DefaultOSFactory")).deploy()
-        this.daos = await this.factory.deployed()
+        this.factory = await (await ethers.getContractFactory("DefaultOSFactory")).deploy();
+        this.daos = await this.factory.deployed();
 
-        await this.daos.setOS("0x0000000000000000000000000000000000000000000000000044656661756c74");
-        this.default = await ethers.getContractAt("DefaultOS", await this.daos.osMap("0x0000000000000000000000000000000000000000000000000044656661756c74"));
+        await this.daos.setOS(ethers.utils.formatBytes32String("Valid-Name123"));
+        this.default = await ethers.getContractAt("DefaultOS", await this.daos.osMap(ethers.utils.formatBytes32String("Valid-Name123")));
+    })
 
+    it("enforces naming", async function () {
+        await expect(this.daos.setOS(ethers.utils.formatBytes32String("Invalid Name"))).to.be.revertedWith("OS Factory: Name must consist of alphanumeric characters or hyphen");
     })
 
     // testing is not done here, use a ModuleInstaller stub instead of the Token module
@@ -31,11 +34,11 @@ describe("DefaultOS.sol", function () {
         })
     })
 
-    describe("DefaultOS", async function() {
-      beforeEach(async function () {
-        this.DefaultEpochInstaller = await ethers.getContractFactory("def_EpochInstaller");
-        this.epochModule = await this.DefaultEpochInstaller.deploy();
-        await this.epochModule.deployed();
-      })
-    })
+    // describe("DefaultOS", async function() {
+    //   beforeEach(async function () {
+    //     this.DefaultEpochInstaller = await ethers.getContractFactory("def_EpochInstaller");
+    //     this.epochModule = await this.DefaultEpochInstaller.deploy();
+    //     await this.epochModule.deployed();
+    //   })
+    // })
 })

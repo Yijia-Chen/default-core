@@ -33,11 +33,16 @@ contract def_Token is DefaultOSModule, ERC20("Default Token", "DEF") {
 
     constructor(DefaultOS os_) DefaultOSModule(os_) {}
 
+    modifier onlyOS() {      
+      require(_OS.isModule(msg.sender) || msg.sender == _OS.owner(), "only the os modules internally can call this function");
+      _;
+    }
+
 
     /// @notice Mint new tokens and assign them to member address
     /// @param member_ Address of member
     /// @param amount_ Number of tokens to transfer
-    function mint(address member_, uint256 amount_) external viaGovernance {
+    function mint(address member_, uint256 amount_) external onlyOS {
         _mint(member_, amount_);
     }
 

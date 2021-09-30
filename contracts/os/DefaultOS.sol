@@ -55,6 +55,7 @@ contract DefaultOSModule is Ownable {
 contract DefaultOS is Ownable {
     bytes32 public organizationName;
     mapping(bytes3 => address) public MODULES;
+    mapping(address => bool) public isModule;    // NOT PROD IMPLEMENTATION——MUST FLIP FALSE UPON UNINSTALL (not implementated yet)
 
     /// @notice Set organization name and add DAO org ID to DAO tracker
     /// @param organizationName_ Name of org
@@ -70,8 +71,10 @@ contract DefaultOS is Ownable {
         external
         onlyOwner
     {
-        bytes3 moduleKeyCode = installer_.moduleKeycode();        
-        MODULES[moduleKeyCode] = installer_.install();
+        bytes3 moduleKeyCode = installer_.moduleKeycode();  
+        address moduleAddr = installer_.install();      
+        MODULES[moduleKeyCode] = moduleAddr;
+        isModule[moduleAddr] = true;
 
         emit ModuleInstalled(address(this), MODULES[moduleKeyCode], moduleKeyCode);
     }
