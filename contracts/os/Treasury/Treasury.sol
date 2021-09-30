@@ -60,7 +60,7 @@ contract def_Treasury is DefaultOSModule {
     /// @notice Open a new vault of a specific token for the treasury. (Governance only)
     /// @param token_ Address of token to create a vault for
     /// @param fee_ Percentage fee (0-100) that members will pay to the DAO from each withdrawl
-    function openVault(address token_, uint8 fee_) external onlyOS {
+    function openVault(address token_, uint8 fee_) external viaGovernance {
         // make sure no vault exists for this token
         require(
             address(getVault[token_]) == address(0),
@@ -114,7 +114,7 @@ contract def_Treasury is DefaultOSModule {
     /// @param amountshares_ # of shares to withdrawl in exchange fo
     function withdrawFromVault(Vault vault_, uint256 amountshares_)
         external
-        onlyOS
+        viaGovernance
     {
         // withdraw from the vault to the OS
         vault_.withdraw(address(_OS), amountshares_);
@@ -136,7 +136,7 @@ contract def_Treasury is DefaultOSModule {
     /// @notice Withdraw earned fees from the vault. No fee will be charged on this withdrawl. (Governance only)
     /// @param vault_ Address of vault
     /// @param newFeePctg New percentage fee (0-100) that members will pay to the DAO from each withdrawl
-    function changeFee(Vault vault_, uint8 newFeePctg) external onlyOS {
+    function changeFee(Vault vault_, uint8 newFeePctg) external viaGovernance {
         require(newFeePctg >= 0 && newFeePctg <= 100);
 
         // set the fee to the new fee

@@ -37,7 +37,7 @@ contract def_Token is DefaultOSModule, ERC20("Default Token", "DEF") {
     /// @notice Mint new tokens and assign them to member address
     /// @param member_ Address of member
     /// @param amount_ Number of tokens to transfer
-    function mint(address member_, uint256 amount_) external { // onlyOS("MINTER") -> an OS-whitelist of all the tokens that have the ability to call this function
+    function mint(address member_, uint256 amount_) external viaGovernance {
         _mint(member_, amount_);
     }
 

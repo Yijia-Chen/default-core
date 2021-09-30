@@ -71,7 +71,7 @@ contract def_Mining is DefaultOSModule {
 
     /// @notice Set weekly token bonus to caller of issueRewards() function.
     /// @param newTokenBonus_ # of tokens to be paid to caller of issueRewards function
-    function setTokenBonus(uint256 newTokenBonus_) external onlyOS {
+    function setTokenBonus(uint256 newTokenBonus_) external viaGovernance {
         TOKEN_BONUS = newTokenBonus_;
     }
 
@@ -101,7 +101,7 @@ contract def_Mining is DefaultOSModule {
     /// @notice Assign the vault contract to be mined. This "activates" the mining program
     /// @param token_ the Address of the token to be mined
     /// @dev The token should have a vault in the treasury before calling this function
-    function assignVault(address token_) external onlyOS {        
+    function assignVault(address token_) external viaGovernance {        
         require (address(_vault) == address(0), "can only assign vault once");        
         _vault = _Treasury.getVault(token_);
     }

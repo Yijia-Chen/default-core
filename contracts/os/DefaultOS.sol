@@ -4,9 +4,6 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
-import "hardhat/console.sol";
-
 import "./DefaultOSFactory.sol";
 
 /// @title Default OS Module Installer
@@ -47,7 +44,7 @@ contract DefaultOSModule is Ownable {
         _OS = os_;
     }
 
-    modifier onlyOS() {      
+    modifier viaGovernance() {      
       require(msg.sender == _OS.owner(), "only the os owner can make this call");
       _;
     }
