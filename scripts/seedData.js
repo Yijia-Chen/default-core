@@ -9,9 +9,17 @@ const membersModInfo = {
 const tokenModInfo = {
   keyCode: ethers.utils.toUtf8Bytes("TKN"),
   name: "def_Token",
-}
+};
+const peerRewardsModInfo = {
+  keyCode: ethers.utils.toUtf8Bytes("PAY"),
+  name: "def_PeerRewards",
+};
+const epochModInfo = {
+  keyCode: ethers.utils.toUtf8Bytes("EPC"),
+  name: "def_Epoch"
+};
 
-async function seedData() {
+async function seedData() {  
   const { 
     defaultOs, 
     defaultOsFactory,
@@ -59,13 +67,27 @@ async function seedData() {
   await otherOs.installModule(defaultMembersInstaller.address);
   await otherOs.installModule(defaultPeerRewardsInstaller.address);
 
-  // Members module contract
+  // get members module contract info
   const testOsMemMod = await getModuleContract(testOs, membersModInfo);
   const otherOsMemMod = await getModuleContract(otherOs, membersModInfo);
 
-  // Token module contract
+  // get token module contract info
   const testOsTokenMod = await getModuleContract(testOs, tokenModInfo);
   const otherOsTokenMod = await getModuleContract(otherOs, tokenModInfo);
+
+  // get peer rewards contract info
+  const testOsRewardsMod = await getModuleContract(testOs, peerRewardsModInfo);
+  const otherOsRewardsMod = await getModuleContract(otherOs, peerRewardsModInfo);
+
+  // get epoch contract info
+  const testOsEpochMod = await getModuleContract(testOs, epochModInfo);
+  const otherOsEpochMod = await getModuleContract(otherOs, epochModInfo);
+  
+  // set thresholds to 0 for ease of data population
+  testOsRewardsMod.setParticipationThreshold(0);
+  testOsRewardsMod.setRewardsThreshold(0);
+  otherOsRewardsMod.setParticipationThreshold(0);
+  otherOsRewardsMod.setRewardsThreshold(0);
 
   // create memberships
   await bulkRegisterMembers(testOs, testOsMemMod, testOsMembers);
@@ -82,6 +104,28 @@ async function seedData() {
   // endorse members
   await bulkEndorseMembers(testOs, testOsMemMod, testOsTokenMod, testOsMembers);
   await bulkEndorseMembers(otherOs, otherOsMemMod, otherOsTokenMod, otherOsMembers);
+
+  // register for allocations for first time
+  await firstTimeAllocationRegistration(testOs, testOsMemMod, testOsRewardsMod, testOsMembers);
+  await firstTimeAllocationRegistration(otherOs, otherOsMemMod, otherOsRewardsMod, otherOsMembers);
+
+
+  // increment epoch after all registrations
+  // we cannot allocate for the first epoch. we can only endorse.
+  await incrementEpochAfterRegistration(testOs, testOsEpochMod, testOsRewardsMod, testOsMembers, 1);
+  await incrementEpochAfterRegistration(otherOs, otherOsEpochMod, otherOsRewardsMod, otherOsMembers, 1);
+
+  await bulkRegisterForAllocations(testOs, testOsEpochMod, testOsRewardsMod, testOsMembers, 2);
+  await bulkRegisterForAllocations(otherOs, otherOsEpochMod, otherOsRewardsMod, otherOsMembers, 2);
+
+
+  // set and commit allocations for the current epoch
+  await bulkAllocateAndEndEpoch(testOs, testOsRewardsMod, testOsEpochMod, testOsMembers, 2);
+  await bulkAllocateAndEndEpoch(otherOs, otherOsRewardsMod, otherOsEpochMod, otherOsMembers, 2);
+
+  // claim rewards from previous epoch 
+  await bulkClaimRewards(testOs, testOsRewardsMod, testOsEpochMod, testOsMembers, 3);
+  await bulkClaimRewards(otherOs, otherOsRewardsMod, otherOsEpochMod, otherOsMembers, 3);
 
 }
 
@@ -137,43 +181,242 @@ async function bulkStakeForMembers(os, membersModule, tokenModule, members) {
 
 async function bulkEndorseMembers(os, membersModule, tokenModule, members) {
   const osName = ethers.utils.parseBytes32String(await os.organizationName());
+  const endorseableList = members.map(m => m.address ); // copy the member list
   await members.forEach( async (member, index) => {
 
-    membersModule.once(membersModule.filters.TokensStaked(null, member.address), async () => {
+    membersModule.once(
+      membersModule.filters.TokensStaked(os.address, member.address), 
+      async (_os, _member, _amount, _lockDuration, _epoch) => {
       
       // pick a random member to endorse to
       let randomIndex = null;
       while(randomIndex === null || randomIndex === index) {
-        randomIndex = faker.datatype.number({min: 0, max: members.length - 1});
+        randomIndex = faker.datatype.number({min: 0, max: endorseableList.length - 1});
       }
+
+      // endorse (use the endorseableList to ensure every member gets at least one endorsement)
       const totalEndorsements = await membersModule.totalEndorsementsAvailableToGive(member.address);
-      const memberToEndorse = members[randomIndex];
-      //console.log(`member: ${member.address} will give ${totalEndorsements.toString()} to member: ${memberToEndorse.address}`);
-      await membersModule.connect(member).endorseMember(memberToEndorse.address, totalEndorsements);
+      const addressToEndorse = endorseableList.pop(randomIndex);
+      await membersModule.connect(member).endorseMember(addressToEndorse, totalEndorsements);
 
       // verify
       membersModule.once(
-        membersModule.filters.EndorsementGiven(null, member.address, memberToEndorse.address), 
-        async (_os, _fromMember, _toMember, _endorsementsGiven, _epoch) => {
-          console.log(`[OS ${osName}][Endorsements Received] ${_toMember} received ${_endorsementsGiven.toString()} from ${_fromMember}`);
+        membersModule.filters.EndorsementGiven(os.address, member.address, null, null, _epoch), 
+        async (os_, fromMember_, toMember_, endorsementsGiven_, epoch_) => {
+          console.log(`[OS ${osName}][Endorsements Received] ${toMember_} received ${endorsementsGiven_.toString()} from ${fromMember_}`);
 
           // randomly create a few withdrawals
           if (faker.datatype.boolean()) {
-            const signer = await ethers.getSigner(_fromMember);
+            const signer = await ethers.getSigner(fromMember_);
             const amtToWithdrawl = ethers.BigNumber.from(faker.datatype.number({min: 1, max: 100})); // there should never be less than 100 endorsements given
-            await membersModule.connect(signer).withdrawEndorsementFrom(_toMember, amtToWithdrawl);
+            await membersModule.connect(signer).withdrawEndorsementFrom(toMember_, amtToWithdrawl);
 
-            // verify 
+            // verify withdrawals
             membersModule.once(
-              membersModule.filters.EndorsementWithdrawn(null, _fromMember, _toMember), 
-              async (os_, fromMember_, toMember_, endorsementsWithdrawn_, epoch_) => {
-                console.log(`[OS ${osName}][Endorsement Withdrawn] ${fromMember_} withdrew ${endorsementsWithdrawn_.toString()} from their endorsement to ${toMember_}`);
-            });
-        }
-      });
+              membersModule.filters.EndorsementWithdrawn(os.address, fromMember_, null, null, _epoch), 
+              async (_os_, _fromMember_, _toMember_, _endorsementsWithdrawn_, _epoch_) => {
+                console.log(`[OS ${osName}][Endorsement Withdrawn] ${_fromMember_} withdrew ${_endorsementsWithdrawn_.toString()} from their endorsement to ${_toMember_}`);
+              },
+            );
+          }
+        },
+      );
     });
-
   });
+}
+
+async function firstTimeAllocationRegistration(os, membersModule, rewardsModule, members) {
+  const threshold = await rewardsModule.REWARDS_THRESHOLD();
+  const registeredMembers = []; // use array to prevent adding the same member more than once.
+  let registrationCount = 0;
+
+
+  // catch every endorsement given event and check if member is able to register for allocations
+  // after receiving the endorsement.
+  // once the member has registered for allocations remove the event listener
+  membersModule.on(
+    membersModule.filters.EndorsementGiven(os.address, null, null, null, null),
+    async (_os, _fromMember, _toMember, _endorsementsGiven, _epoch) => {
+      const endorsementTotal = await membersModule.totalEndorsementsReceived(_toMember);
+      if (endorsementTotal >= threshold && !registeredMembers.includes(_toMember)) {
+        
+        // register member for allocation
+        const signer = await ethers.getSigner(_toMember);
+        await rewardsModule.connect(signer).register();
+        registrationCount++;
+        registeredMembers.push(_toMember);
+
+        if (registrationCount === members.length) {
+          // once we've registered every member remove the listener
+          membersModule.off(membersModule.filters.EndorsementGiven(os.address, null, null, null, null));
+        }
+      }
+    },
+  );
+}
+
+async function bulkRegisterForAllocations(os, epochModule, rewardsModule, members, epoch) {
+  const osName = ethers.utils.parseBytes32String(await os.organizationName());
+  epochModule.once(
+    epochModule.filters.EpochIncremented(os.address, epoch, null),
+    (_os, _epoch, _epochTime) => {
+      members.forEach( async member => {
+        await rewardsModule.connect(member).register();
+        rewardsModule.once(
+          rewardsModule.filters.MemberRegistered(os.address, member.address, null, epoch+1),
+          (_os, _member, _ptsRegistered, _epochRegisteredFor) => {
+            console.log(
+              `[OS ${osName}][Member Registered for Allocations] ${_member} registered for allocations in epoch: ${_epochRegisteredFor}`
+            );
+          },
+        );
+      });
+    },
+  );
+}
+
+async function incrementEpochAfterRegistration(os, epochModule, rewardsModule, members, epoch) {
+  const osName = ethers.utils.parseBytes32String(await os.organizationName());
+  const registrationEpoch = epoch + 1;
+  let registrationCount = 0;
+
+  rewardsModule.on(
+    rewardsModule.filters.MemberRegistered(os.address, null, null, registrationEpoch),
+    async (_os, _member, _ptsRegistered, _epochRegisteredFor) => {
+
+      registrationCount++;
+
+
+      // once all members have registered then increment the epoch
+      if (registrationCount === members.length) {
+        // remove the registration event listener
+        rewardsModule.off(rewardsModule.filters.MemberRegistered(os.address, null, null, registrationEpoch));
+
+        console.log(`[OS ${osName}][Member Registered for Allocations] Finished Registering for 1st allocation. Incrementing Epoch...`);
+
+        await incrementEpoch(epochModule, members);
+      }
+    },
+  );
+
+}
+
+async function bulkAllocateAndEndEpoch(os, rewardsModule, epochModule, members, epoch) {
+  /*
+    This function sets allocations, committs those allocations, and then
+    finally increments the epochs once all allocations have been committed.
+  */
+  const osName = ethers.utils.parseBytes32String(await os.organizationName());
+  let memberCommittedCount = 0; // running total of number of members who committed their allocations
+
+  epochModule.once(
+    epochModule.filters.EpochIncremented(os.address, epoch, null),
+    (_os, _epoch, _epochTime) => {
+      console.log(`[OS ${osName}][Epoch Incremented] Epoch Number ${_epoch}`);
+      // catch the OS epoch incremented event. We can safely assume
+      // all members have registered for the epoch at this point
+      members.forEach(member => {
+        
+        // choose a few members to allocate to
+        const potentialRewardees = members.filter(m => m.address !== member.address);
+        const numMembersToReward = faker.datatype.number({min: 3, max: potentialRewardees.length});
+        const membersToReward = faker.random.arrayElements(
+          potentialRewardees,
+          numMembersToReward,
+        );
+        
+        // allocate to those randomly selected members
+        const totalPoints = faker.datatype.number({min: membersToReward.length, max: 255}); // use a random uint8 number, min 1 point per member
+        const pointsPerMember = Math.floor(totalPoints / membersToReward.length);
+        membersToReward.forEach( memberToReward => {
+          rewardsModule.connect(member).configureAllocation(
+            memberToReward.address, 
+            pointsPerMember,
+            {gasLimit: ethers.BigNumber.from("12450000")}, // provide max gas.
+          );
+        });
+
+        // wait until last member allocation event. then commit allocations.
+        let allocationsSetCount = 0;
+        rewardsModule.on(
+          rewardsModule.filters.AllocationSet(null, member.address, null, null),
+          async (os_, fromMember_, toMember_, allocPts_, currentEpoch_) => {
+            // count all allocations from this member. once we've counted the final one
+            // then commit the allocations.
+            allocationsSetCount++;
+            if (allocationsSetCount === numMembersToReward) {
+              rewardsModule.off(rewardsModule.filters.AllocationSet(null, member.address, null, null));
+              console.log(`[OS ${osName}][Allocations Set] ${fromMember_} gave ${numMembersToReward} rewards in epoch ${currentEpoch_}`);
+              rewardsModule.connect(member).commitAllocation();
+              
+  
+              // verify allocations have been committed by counting each AllocationGiven event.
+              let allocationsCommittedCount = 0;
+              rewardsModule.on(
+                rewardsModule.filters.AllocationGiven(null, member.address, null, null, _epoch),
+                async (_os_, _fromMember_, _toMember_, _allocGiven_, _currentEpoch_) => {
+                  allocationsCommittedCount++;
+                  if (allocationsCommittedCount === numMembersToReward) {
+                    rewardsModule.off(rewardsModule.filters.AllocationGiven(null, member.address, null, null, _epoch));
+                    console.log(`[OS ${osName}][Allocations Committed] ${_fromMember_} committed their allocations for epoch: ${_currentEpoch_}`);
+                    memberCommittedCount++;
+
+                    if (memberCommittedCount === members.length) {
+                      // once all members have committed their allocations then increment the epoch
+                      await incrementEpoch(epochModule, members);
+                    }
+                  }
+                },
+              );
+            }
+          },
+        );
+      });
+    },
+  );
+}
+
+async function bulkClaimRewards(os, rewardsModule, epochModule, members, epoch) {
+  const osName = ethers.utils.parseBytes32String(await os.organizationName());
+
+  epochModule.once(
+    epochModule.filters.EpochIncremented(os.address, epoch, null),
+    async (_os, _epoch, _epochTime) => {
+
+      members.forEach( async member => {
+        await rewardsModule.connect(member).claimRewards();
+
+        rewardsModule.once(
+          rewardsModule.filters.RewardsClaimed(os.address, member.address, null, epoch), 
+          async (os_, member_, totalRewardsClaimed_, epochClaimed_) => {
+            console.log(`[OS ${osName}][Rewards Claimed] ${member_} claimed ${totalRewardsClaimed_} they received from the previous epoch (current epoch is ${epochClaimed_})`);
+          },
+        );
+      });
+    },
+  );
+
+}
+
+async function incrementEpoch(epochModule, members) {
+  const oneWeek = 7 * 24 * 60 * 60;
+
+  const blockNumBefore = await ethers.provider.getBlockNumber();
+  const blockBefore = await ethers.provider.getBlock(blockNumBefore);
+  const timestampBefore = blockBefore.timestamp;
+  
+  // choose a random member to increment the epoch and receive the reward
+  const randomMemberIndex = faker.datatype.number(
+    {min: 0, max: members.length - 1}
+  );
+
+  await ethers.provider.send('evm_setNextBlockTimestamp', [timestampBefore + oneWeek]);
+
+  const callContract = () => epochModule.connect(members[randomMemberIndex]).incrementEpoch();
+
+  // this can result in an error if multiple OS's increment the block time
+  // at the same time so even if there is an error just continue.
+  ethers.provider.send('evm_mine').then(callContract).catch(callContract);
 }
 
 async function getModuleContract(os, moduleInfo) {
