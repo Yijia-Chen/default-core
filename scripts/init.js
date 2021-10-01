@@ -1,7 +1,7 @@
 const { ethers } = require("hardhat");
 
 async function main() {
-  const defaultOsName = ethers.utils.formatBytes32String("Default Dao")
+  const defaultOsName = ethers.utils.formatBytes32String("Default-Dao")
 
   const DefaultOsFactory = await ethers.getContractFactory("DefaultOSFactory");
 
