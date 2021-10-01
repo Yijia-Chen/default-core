@@ -5,13 +5,13 @@ const deploy = require('./init');
 // populate the addresses in the config object to reuse existing contracts.
 // otherwise new contracts will be deployed.
 const config = {
-  factoryAddress: '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9',
-  tokenInstallerAddress: '0x0165878A594ca255338adfa4d48449f69242Eb8F',
-  epochInstallerAddress: '0xa513E6E4b8f2a923D98304ec87F64353C4D5C853',
-  treasuryInstallerAddress: '0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6',
-  miningInstallerAddress: '0x8A791620dd6260079BF849Dc5567aDC3F2FdC318',
-  membersInstallerAddress: '0x610178dA211FEF7D417bC0e6FeD39F05609AD788',
-  rewardsInstallerAddress: '0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e',
+  factoryAddress: null,
+  tokenInstallerAddress: null,
+  epochInstallerAddress: null,
+  treasuryInstallerAddress: null,
+  miningInstallerAddress: null,
+  membersInstallerAddress: null,
+  rewardsInstallerAddress: null,
 };
 
 const tokenModInfo = createModInfo('def_Token', 'TKN');
@@ -26,8 +26,8 @@ seedData();
 async function seedData() {  
   const accounts = await ethers.getSigners();
 
-  const testOsName = ethers.utils.formatBytes32String('testOs3');
-  const otherOsName = ethers.utils.formatBytes32String('otherOs4');
+  const testOsName = ethers.utils.formatBytes32String('testOs');
+  const otherOsName = ethers.utils.formatBytes32String('otherOs');
 
   let { 
     factoryAddress,
