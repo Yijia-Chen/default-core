@@ -69,7 +69,7 @@ contract def_Members is Staking, DefaultOSModule {
     
     /// @notice Set global limit on endorsements a member can receive from another member
     /// @param newLimit_ Max amount of endorsements a member can receive from another member
-    function setEndorsementLimit(uint256 newLimit_) external onlyOwner {
+    function setEndorsementLimit(uint256 newLimit_) external viaGovernance {
         ENDORSEMENT_LIMIT = newLimit_;
     }
 
