@@ -410,13 +410,17 @@ async function incrementEpoch(epochModule, members) {
     {min: 0, max: members.length - 1}
   );
 
-  await ethers.provider.send('evm_setNextBlockTimestamp', [timestampBefore + oneWeek]);
+  const justIncrement = (e) => epochModule.connect(members[randomMemberIndex]).incrementEpoch();
+  const mineThenIncrement = () => {
+    ethers.provider.send('evm_mine').then( () => {
+      epochModule.connect(members[randomMemberIndex]).incrementEpoch();
+    });
+  };
 
-  const callContract = () => epochModule.connect(members[randomMemberIndex]).incrementEpoch();
-
-  // this can result in an error if multiple OS's increment the block time
-  // at the same time so even if there is an error just continue.
-  ethers.provider.send('evm_mine').then(callContract).catch(callContract);
+  ethers.provider.send(
+    'evm_setNextBlockTimestamp',
+     [timestampBefore + oneWeek]
+  ).then(mineThenIncrement).catch(justIncrement);
 }
 
 async function getModuleContract(os, moduleInfo) {
