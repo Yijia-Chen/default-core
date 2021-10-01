@@ -43,10 +43,10 @@ contract def_PeerRewards is DefaultOSModule{
 
 
     // Emitted events for this module
-    event MemberRegistered(address os, address member, uint16 epochRegisteredFor, uint256 ptsRegistered);
-    event AllocationSet(address os, address fromMember, address toMember, uint8 allocPts, uint16 currentEpoch);
-    event AllocationGiven(address os, address fromMember, address toMember, uint256 allocGiven, uint16 currentEpoch);
-    event RewardsClaimed(address os, address member, uint256 totalRewardsClaimed, uint16 epochClaimed);
+    event MemberRegistered(address indexed os, address indexed member, uint256 ptsRegistered, uint16 indexed epochRegisteredFor);
+    event AllocationSet(address indexed os, address indexed fromMember, address toMember, uint8 allocPts, uint16 indexed currentEpoch);
+    event AllocationGiven(address indexed os, address indexed fromMember, address toMember, uint256 allocGiven, uint16 indexed currentEpoch);
+    event RewardsClaimed(address indexed os, address indexed member, uint256 totalRewardsClaimed, uint16 indexed epochClaimed);
 
 
     // persistent allocation data for a particular member
@@ -178,7 +178,7 @@ contract def_PeerRewards is DefaultOSModule{
 
         }
 
-        emit MemberRegistered(address(_OS), msg.sender, currentEpoch + 1, adjustedScore);
+        emit MemberRegistered(address(_OS), msg.sender, adjustedScore, currentEpoch + 1);
     }
 
 

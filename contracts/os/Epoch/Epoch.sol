@@ -37,7 +37,7 @@ contract def_Epoch is DefaultOSModule {
   }
 
   // emitted events
-  event EpochIncremented(uint16 epoch, uint256 epochTime);  
+  event EpochIncremented(address indexed os, uint16 indexed epoch, uint256 epochTime);
 
   uint16 public current = 1;
   uint256 public epochTime = block.timestamp;
@@ -61,6 +61,6 @@ contract def_Epoch is DefaultOSModule {
     current++;
 
     // _Token.mint(msg.sender, TOKEN_BONUS);
-    emit EpochIncremented(current, epochTime);
+    emit EpochIncremented(address(_OS), current, epochTime);
   }
 }
