@@ -112,23 +112,23 @@ contract def_PeerRewards is DefaultOSModule{
     uint8 public MAX_ALLOC_PCTG = 40; // min 3 members
 
     
-    function setParticipationThreshold(uint256 newThreshold_) external onlyOS {
+    function setParticipationThreshold(uint256 newThreshold_) external viaGovernance {
         PARTICIPATION_THRESHOLD = newThreshold_;
     }
 
-    function setRewardsThreshold(uint256 newThreshold_) external onlyOS {
+    function setRewardsThreshold(uint256 newThreshold_) external viaGovernance {
         REWARDS_THRESHOLD = newThreshold_;
     }
 
-    function setContributorEpochRewards(uint256 newEpochRewards_) external onlyOS {
+    function setContributorEpochRewards(uint256 newEpochRewards_) external viaGovernance {
         CONTRIBUTOR_EPOCH_REWARDS = newEpochRewards_;
     }
 
-    function setMinAllocPctg(uint8 newMinAllocPctg_) external onlyOS {
+    function setMinAllocPctg(uint8 newMinAllocPctg_) external viaGovernance {
         MIN_ALLOC_PCTG = newMinAllocPctg_;
     }   
     
-    function setMaxAllocPctg(uint8 newMaxAllocPctg_) external onlyOS {
+    function setMaxAllocPctg(uint8 newMaxAllocPctg_) external viaGovernance {
         MAX_ALLOC_PCTG = newMaxAllocPctg_;
     }
 

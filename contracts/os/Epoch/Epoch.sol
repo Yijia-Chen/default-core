@@ -45,13 +45,18 @@ contract def_Epoch is DefaultOSModule {
 
   /// @notice Set amount of tokens that will be minted at the end of each epoch
   /// @param newTokenBonus_ Amount of tokens to be minted each epoch
-  function setTokenBonus(uint256 newTokenBonus_) external onlyOS {
+  function setTokenBonus(uint256 newTokenBonus_) external viaGovernance {
     TOKEN_BONUS = newTokenBonus_;    
   }
 
   /// @notice Once 7 days have passed from the start of the last epoch, start a new epoch and mint new tokens
-  function incrementEpoch() external {        
-    require(block.timestamp >= epochTime + (7 days), "cannot increment epoch before deadline");
+  function incrementEpoch() external {  
+
+    // ***************************************** NOTE *********************************************
+    // we are removing the time lock on incrementing epochs for testing purposes, add back in prod
+    // ********************************************************************************************
+
+    // require(block.timestamp >= epochTime + (7 days), "cannot increment epoch before deadline");
     epochTime = block.timestamp;
     current++;
 
